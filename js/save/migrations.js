@@ -28,6 +28,12 @@
       s.autoGather = { progressSec: 0 };
       return s;
     },
+    // v4 → v5：お客さんの注文・思い出の称号を追加
+    5: s => {
+      s.orders = { list: [], nextAt: 0 };
+      s.memories = {};
+      return s;
+    },
   };
 
   function migrate(raw) {

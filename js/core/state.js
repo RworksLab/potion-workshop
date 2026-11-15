@@ -7,7 +7,7 @@
 (function (PS) {
   'use strict';
 
-  const SCHEMA_VERSION = 4;
+  const SCHEMA_VERSION = 5;
 
   function createInitialState(now) {
     now = now || Date.now();
@@ -28,6 +28,8 @@
       reviews: [],              // お客さんのレビュー（新しい順）[{ id, t, potionId, potionName, customer, mood, stars, text, key, read }]
       upgrades: {},             // 強化レベル { upgradeId: レベル }
       autoGather: { progressSec: 0 }, // 自動採取（お手伝い妖精）の準備の進み具合
+      orders: { list: [], nextAt: now + ((PS.data.orders && PS.data.orders.firstDelayMin) || 2) * 60000 }, // お客さんの注文 [{ id, customer, kind, value, text, createdAt, expiresAt }]
+      memories: {},             // 思い出の称号 { 称号ID: 手に入れた日時 }
       stats: { harvested: 0, brewed: 0, sold: 0, earned: 0, spent: 0, autoHarvested: 0, daily: { date: '', earned: 0, sold: 0 } },
       settings: { seVolume: 0.7, bgmVolume: 0.5, bgmOn: true, bgmSong: 'auto' },
     };
@@ -53,6 +55,12 @@
     }
     if (!s.garden || !Array.isArray(s.garden.slots)) s.garden = { slots: [], cols: 3 };
     if (!(s.garden.cols >= 1)) s.garden.cols = 3;
+    // お客さんの注文・思い出の称号（v5）
+    if (!s.orders || typeof s.orders !== 'object' || !Array.isArray(s.orders.list)) s.orders = { list: [], nextAt: 0 };
+    s.orders.list = s.orders.list.filter(o => o && o.id && o.kind && o.text && isFinite(o.expiresAt)).slice(0, (PS.data.orders && PS.data.orders.slots) || 3);
+    if (!isFinite(s.orders.nextAt)) s.orders.nextAt = 0;
+    if (!s.memories || typeof s.memories !== 'object' || Array.isArray(s.memories)) s.memories = {};
+    for (const k of Object.keys(s.memories)) if (!isFinite(s.memories[k])) delete s.memories[k];
     s.garden.slots.forEach(sl => { if (sl && sl.special && !['lucky'].includes(sl.special)) delete sl.special; });
     if (!Array.isArray(s.potions)) throw new Error('ポーションデータが壊れています');
     s.potions = s.potions.filter(p => p && typeof p.id === 'string' && p.generated);

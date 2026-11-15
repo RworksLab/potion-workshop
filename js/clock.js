@@ -37,6 +37,10 @@
           r.reviews = PS.core.reviews.fromSales(s, r, rng, now);
         });
       }
+      // お客さんの注文：帰った人を外し、空いた枠に次のお客さんを入れる
+      if (PS.core.orders && PS.core.orders.due(state, now)) {
+        PS.store.commit('orders', s => PS.core.orders.refresh(s, now, rng));
+      }
       return r;
     },
 

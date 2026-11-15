@@ -239,6 +239,64 @@
       };
       return svg(D[p.name] || '', '0 0 48 48', 'up-icon-art');
     },
+    /* ---------- 思い出の称号のメダル（48×48）----------
+     *  name … 絵柄（下の G のキー）/ color … メダルの地の色 / locked … まだ手に入れていない（灰色の「？」）
+     *  絵柄は、ゲームの絵（大鍋・コイン・瓶・畑・お店）と、メダル用に描いた小さな絵を組み合わせる
+     */
+    memoryBadge(p) {
+      const K = '#5b5470';
+      const st = (fill, w = 2) => `fill="${fill}" stroke="${K}" stroke-width="${w}" stroke-linejoin="round" stroke-linecap="round"`;
+      const nest = (markup, x, y, w, h) => markup.replace('<svg ', `<svg x="${x}" y="${y}" width="${w}" height="${h}" `);
+      const spark = (x, y, r, c) => `<path d="M${x} ${y - r} Q${x} ${y} ${x + r} ${y} Q${x} ${y} ${x} ${y + r} Q${x} ${y} ${x - r} ${y} Q${x} ${y} ${x} ${y - r}Z" fill="${c || '#ffd75e'}"/>`;
+      const stars = n => Array.from({ length: n }, (_, i) => spark(24 + (i - (n - 1) / 2) * 6.5, 36.5, 2.8, '#ffc93a')).join('');
+      const potion = (bottle, color, texture, rarity) => renderPotion({ bottle, color, texture: texture || 'smooth', rarity: rarity || 'N' });
+      const gem = c => `<path d="M17 18 L21 13 H27 L31 18 L24 30Z" ${st(c)}/><path d="M17 18 H31 M21 13 L24 18 L27 13 M24 18 V30" fill="none" stroke="${K}" stroke-width="1.2" opacity=".6"/>`;
+      const G = {
+        cauldron: () => nest(render('up_cauldron'), 11, 9, 26, 26),
+        coin: () => nest(render('coin'), 12, 10, 24, 24),
+        coins: () => nest(render('coin'), 9, 15, 18, 18) + nest(render('coin'), 21, 15, 18, 18) + nest(render('coin'), 15, 8, 18, 18),
+        treasure: () => nest(render('coin'), 7, 19, 17, 17) + nest(render('coin'), 24, 19, 17, 17) + nest(render('coin'), 15.5, 22, 17, 17)
+          + `<path d="M16 13 L20 8 H28 L32 13 L24 24Z" ${st('#9fd7ff')}/><path d="M16 13 H32 M20 8 L24 13 L28 8 M24 13 V24" fill="none" stroke="${K}" stroke-width="1.1" opacity=".6"/>${spark(36, 9, 2.8, '#fff')}`,
+        bubble: () => `<path d="M12 13 H36 A3 3 0 0 1 39 16 V28 A3 3 0 0 1 36 31 H22 L16 36 V31 H12 A3 3 0 0 1 9 28 V16 A3 3 0 0 1 12 13Z" ${st('#fff')}/>${spark(24, 22, 5, '#ffc93a')}`,
+        bubbles: () => `<path d="M8 11 H27 A3 3 0 0 1 30 14 V22 A3 3 0 0 1 27 25 H15 L11 29 V25 H8 A3 3 0 0 1 5 22 V14 A3 3 0 0 1 8 11Z" ${st('#ffe1ea')}/>
+          <path d="M21 20 H40 A3 3 0 0 1 43 23 V31 A3 3 0 0 1 40 34 H37 V38 L33 34 H21 A3 3 0 0 1 18 31 V23 A3 3 0 0 1 21 20Z" ${st('#fff')}/>${spark(30.5, 27, 3.5, '#ffc93a')}`,
+        scroll: () => `<path d="M14 12 H32 V34 A3 3 0 0 1 29 37 H14Z" ${st('#fff6dc')}/><path d="M14 12 A3 3 0 0 0 14 18 H17 V12" ${st('#f0dca8')}/>
+          <path d="M29 37 A3 3 0 0 0 32 34 V31 H35 V34 A3 3 0 0 1 32 37Z" ${st('#f0dca8')}/><path d="M19 20 H28 M19 25 H28 M19 30 H25" stroke="#c9a96e" stroke-width="1.8" stroke-linecap="round"/>`,
+        scrollHeart: () => G.scroll() + `<path d="M33 9 c-2 -3 -7 -1 -5 3 l5 4 l5 -4 c2 -4 -3 -6 -5 -3z" ${st('#f59bc0', 1.6)}/>`,
+        gemSR: () => gem('#c9b3ff') + `<text x="24" y="39" font-size="8" text-anchor="middle" font-weight="bold" fill="#8e63d4" font-family="sans-serif">SR</text>`,
+        gemSSR: () => gem('#ffd08a') + `<text x="24" y="39" font-size="7.5" text-anchor="middle" font-weight="bold" fill="#d08a1e" font-family="sans-serif">SSR</text>`,
+        gemUR: () => { const id = nextId('ur'); return `<defs><linearGradient id="${id}" x1="0" x2="1"><stop offset="0" stop-color="#ff9cc8"/><stop offset=".5" stop-color="#9fd7ff"/><stop offset="1" stop-color="#c9b3ff"/></linearGradient></defs>`
+          + gem(`url(#${id})`) + `<text x="24" y="39" font-size="8" text-anchor="middle" font-weight="bold" fill="#e0609c" font-family="sans-serif">UR</text>`; },
+        heart: () => nest(potion('heart', 'pink', 'fizzy', 'R'), 12, 8, 24, 27),
+        star: () => nest(potion('star', 'yellow', 'sparkle', 'R'), 11, 8, 26, 28),
+        laugh: () => `<circle cx="24" cy="23" r="12" ${st('#ffe08a')}/><path d="M18 20 q2 -3 4 0 M26 20 q2 -3 4 0" fill="none" stroke="${K}" stroke-width="1.8" stroke-linecap="round"/>
+          <path d="M17.5 25 Q24 33 30.5 25Z" ${st('#ff8a9a', 1.6)}/><path d="M12 19 l-3 -2 M36 19 l3 -2" stroke="#8fd6ee" stroke-width="2" stroke-linecap="round"/>`,
+        dizzy: () => `<circle cx="24" cy="23" r="12" ${st('#d6f0d0')}/><path d="M17 20 a2.5 2.5 0 1 1 3 2.5 M27 20 a2.5 2.5 0 1 1 3 2.5" fill="none" stroke="${K}" stroke-width="1.6" stroke-linecap="round"/>
+          <path d="M19 28 q2.5 -2 5 0 t5 0" fill="none" stroke="${K}" stroke-width="1.8" stroke-linecap="round"/>${spark(35, 12, 3, '#c9b3ff')}${spark(13, 12, 2.4, '#c9b3ff')}`,
+        flask: n => () => nest(potion('round', 'green', 'fizzy', 'N'), 13, 6, 22, 25) + stars(n),
+        book: () => `<path d="M14 9 H34 V35 H17 A3 3 0 0 1 14 32Z" ${st('#f8b8d0')}/><path d="M17 35 V38 H34 V35" ${st('#fff')}/>
+          <path d="M22.5 15 h3 v2.4 l2.5 3.4 a2 2 0 0 1 -1.7 3 h-4.6 a2 2 0 0 1 -1.7 -3 l2.5 -3.4Z" fill="#fff"/><path d="M17 9 V35" stroke="${K}" stroke-width="1.4" opacity=".4"/>`,
+        palette: () => `<path d="M24 10 C35 10 40 17 39 23 C38 29 31 27 30 31 C29 36 26 38 22 37 C13 36 8 30 9 22 C10 15 16 10 24 10Z" ${st('#fff3dc')}/>
+          <circle cx="17" cy="19" r="2.8" fill="#f59bc0"/><circle cx="24" cy="15.5" r="2.8" fill="#ffc93a"/><circle cx="31" cy="18" r="2.8" fill="#8fd6ee"/><circle cx="15.5" cy="27" r="2.8" fill="#9fd9b5"/><circle cx="23" cy="30" r="2.8" fill="#c9b3ff"/>`,
+        glass: n => () => `<circle cx="21" cy="21" r="9" ${st('#e8f6ff', 2.4)}/><path d="M27.5 27.5 L35 35" stroke="${K}" stroke-width="3.6" stroke-linecap="round"/>
+          <path d="M16.5 18 a5 5 0 0 1 4 -3" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/>${spark(35, 11, 3.6)}${n > 1 ? spark(12, 34, 3, '#f59bc0') + spark(39, 21, 2.4) : ''}`,
+        field: () => nest(render('up_field_expand'), 10, 9, 28, 28),
+        shop: () => nest(render('up_shop_expand'), 10, 8, 28, 28),
+        moon: () => `<path d="M27 9 A13 13 0 1 0 37 30 A10 10 0 1 1 27 9Z" ${st('#fff3a6')}/>${spark(14, 13, 3.4, '#fff')}${spark(36, 13, 2.6, '#fff')}<circle cx="31" cy="21" r="1.2" fill="#fff"/>`,
+      };
+      G.flask1 = G.flask(1); G.flask2 = G.flask(2); G.flask3 = G.flask(3); G.glass1 = G.glass(1); G.glass2 = G.glass(2);
+      if (p.plain) return svg(G[p.name] ? G[p.name]() : '', '4 4 40 40', 'badge-plain');   // メダルの枠なしで絵柄だけ
+      const bg = p.locked ? '#e6e0ec' : (p.color || '#fff3d6');
+      const ring = p.locked ? '#cfc8da' : '#f3c64e';
+      const glyph = p.locked
+        ? `<text x="24" y="30.5" font-size="17" text-anchor="middle" font-weight="bold" fill="#b3acc2" font-family="sans-serif">?</text>`
+        : (G[p.name] ? G[p.name]() : '');
+      const ribbon = p.locked ? '' : `<path d="M15 40 L12 47 L17 45 L19 48 L21 41Z" fill="#f59bc0" stroke="${K}" stroke-width="1.4" stroke-linejoin="round"/>
+        <path d="M33 40 L36 47 L31 45 L29 48 L27 41Z" fill="#8fd6ee" stroke="${K}" stroke-width="1.4" stroke-linejoin="round"/>`;
+      return svg(`${ribbon}<circle cx="24" cy="23" r="21" fill="${ring}" stroke="${K}" stroke-width="2"/>
+        <circle cx="24" cy="23" r="17.2" fill="${bg}"/><circle cx="24" cy="23" r="17.2" fill="none" stroke="#fff" stroke-width="1.2" opacity=".7"/>
+        <g>${glyph}</g>`, '0 0 48 48', 'memory-badge' + (p.locked ? ' locked' : ''));
+    },
     cauldron() {
       return svg(`<ellipse cx="60" cy="40" rx="42" ry="10" fill="#4a4358"/>` +
         `<path d="M18 40 Q14 86 40 92 H80 Q106 86 102 40Z" fill="#5b5470"/>` +

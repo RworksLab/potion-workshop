@@ -3,7 +3,7 @@
   'use strict';
   const ui = PS.ui;
   const S = () => PS.core.sales;
-  let root, cabinetEl, statsEl, logEl, reviewsEl, bottomEl, timer = null, readTimer = null;
+  let root, cabinetEl, statsEl, logEl, reviewsEl, bottomEl, ordersEl, timer = null, readTimer = null;
   let bottomTab = 'reviews'; // 下部のタブ：reviews お客さんの声 / log 販売履歴
 
   const findPotion = id => PS.store.state.potions.find(p => p.id === id);
@@ -28,6 +28,70 @@
       <div class="stat"><small>今日の売上</small><b>${d.earned.toLocaleString()}<i>G</i></b></div>
       <div class="stat"><small>今日売れた数</small><b>${d.sold}<i>本</i></b></div>
       <div class="stat"><small>これまでの売上</small><b>${s.stats.earned.toLocaleString()}<i>G</i></b></div>`;
+  }
+
+  /* ---------- お客さんの注文 ---------- */
+  const O = () => PS.core.orders;
+  function timeLeft(ms) {
+    const h = Math.floor(ms / 3600000), m = Math.floor((ms % 3600000) / 60000);
+    return h >= 1 ? `あと${h}時間` : `あと${Math.max(1, m)}分`;
+  }
+  const OPEN_KEY = 'fushigi-potion:orders-open';
+  let ordersOpen = (() => { try { return localStorage.getItem(OPEN_KEY) === '1'; } catch (e) { return false; } })();
+  function renderOrders() {
+    const s = PS.store.state, now = Date.now();
+    const list = s.orders.list.slice().sort((a, b) => a.expiresAt - b.expiresAt);
+    const canIds = new Set(list.filter(o => O().candidates(s, o).length).map(o => o.id));
+    const wrap = root.querySelector('.orders-wrap');
+    wrap.classList.toggle('open', ordersOpen);
+    wrap.classList.toggle('has-can', canIds.size > 0);
+    root.querySelector('#orders-summary').innerHTML = list.length
+      ? `${list.length}件${canIds.size ? `<span class="orders-can">わたせる ${canIds.size}</span>` : ''}`
+      : '<span class="orders-none">待っています…</span>';
+    ordersEl.hidden = !ordersOpen;
+    if (!ordersOpen) return;
+    ordersEl.innerHTML = list.map((o, i) => {
+      const can = canIds.has(o.id);
+      return `<div class="order ${can ? 'can' : ''}" data-id="${o.id}">
+        <span class="order-pin"></span>
+        <small class="order-who">${ui.esc(o.customer)}より</small>
+        <p class="order-text">${ui.esc(o.text)}</p>
+        <div class="order-foot"><small class="order-time">${timeLeft(o.expiresAt - now)}で帰る</small>
+          <button class="order-btn" data-act="give" ${can ? '' : 'disabled'}>${can ? 'わたす' : 'まだない'}</button></div>
+      </div>`;
+    }).join('') + (list.length < PS.data.orders.slots ? `<p class="order-wait">つぎのお客さんを待っています…</p>` : '');
+  }
+
+  /** 注文に合うポーションを選んでわたす */
+  function openGive(orderId) {
+    const s = PS.store.state;
+    const o = s.orders.list.find(x => x.id === orderId);
+    if (!o) return;
+    const cands = O().candidates(s, o).sort((a, b) => O().reward(b, o) - O().reward(a, o));
+    const body = ui.modal.open(`
+      <h3 class="modal-title">どれをわたしますか？</h3>
+      <p class="order-quote"><b>${ui.esc(o.customer)}</b>${ui.esc(o.text)}</p>
+      <div class="pick-list">${cands.map(p => `<button class="pick-row r-${p.generated.rarity}" data-id="${p.id}">
+        <span class="pick-art">${PS.assets.art.renderPotion(p.generated)}</span>
+        <span class="pick-info"><b>${ui.esc(p.name)}</b><small>${ui.rarityBadge(p.generated.rarity)} 在庫 ${p.stock}本</small></span>
+        <span class="pick-reward">お礼<b>${O().reward(p, o).toLocaleString()}G</b></span></button>`).join('')}</div>`, { cls: 'modal-give' });
+    body.querySelector('.pick-list').addEventListener('click', e => {
+      const b = e.target.closest('.pick-row');
+      if (!b) return;
+      let res;
+      try { res = PS.store.commit('order', st => O().deliver(st, orderId, b.dataset.id, PS.core.rng.fresh(), Date.now())); }
+      catch (err) { ui.toast(err.message); return; }
+      body.close();
+      PS.assets.sound.play('coin');
+      setTimeout(() => PS.assets.sound.play('review'), 300);
+      renderAll();
+      const done = ui.modal.open(`<div class="order-done">
+        <p class="order-done-title">🎉 注文にこたえました！</p>
+        <p class="order-done-coins">お礼 <b>+${res.coins.toLocaleString()}G</b></p>
+        ${ui.reviewCard(res.review)}
+        <button class="btn primary wide" data-close>どういたしまして</button></div>`, { cls: 'modal-order-done' });
+      done.querySelector('[data-close]').onclick = () => done.close();
+    });
   }
 
   /* ---------- 商品棚（主役） ---------- */
@@ -121,7 +185,7 @@
     PS.store.commit('reviewsRead', st => PS.core.reviews.markAllRead(st));
   }
 
-  function renderAll() { renderTop(); renderStats(); renderShelves(); renderReviews(); renderLog(); }
+  function renderAll() { renderTop(); renderStats(); renderOrders(); renderShelves(); renderReviews(); renderLog(); }
 
   /** 売れるまでのバーだけ更新 */
   function tickBars() {
@@ -294,6 +358,13 @@
           <p class="sub">棚に並べたポーションが自動で売れていきます</p>
           <div class="shop-stats" id="shop-stats"></div>
         </div>
+        <section class="orders-wrap">
+          <button class="orders-head" id="orders-head" aria-expanded="false">
+            <span class="orders-icon">${PS.assets.art.render('order_scroll')}</span>
+            <b>お客さんの注文</b><span class="orders-summary" id="orders-summary"></span><span class="orders-arrow">▼</span>
+          </button>
+          <div class="orders" id="shop-orders" hidden></div>
+        </section>
         <section class="cabinet-wrap">
           <div class="cabinet-head"><h3>商品棚</h3><span class="cabinet-count" id="cabinet-count"></span></div>
           <div class="cabinet"><div class="cabinet-inner" id="shop-cabinet"></div></div>
@@ -312,6 +383,20 @@
       logEl = el.querySelector('#shop-log');
       reviewsEl = el.querySelector('#shop-reviews');
       bottomEl = el.querySelector('#shop-bottom');
+      ordersEl = el.querySelector('#shop-orders');
+      el.querySelector('#orders-head').addEventListener('click', e => {
+        ordersOpen = !ordersOpen;
+        try { localStorage.setItem(OPEN_KEY, ordersOpen ? '1' : '0'); } catch (err) { /* 覚えられなくても続ける */ }
+        e.currentTarget.setAttribute('aria-expanded', ordersOpen);
+        PS.assets.sound.play('tap');
+        renderOrders();
+      });
+      ordersEl.addEventListener('click', e => {
+        const b = e.target.closest('[data-act="give"]');
+        if (!b || b.disabled) return;
+        PS.assets.sound.play('tap');
+        openGive(b.closest('.order').dataset.id);
+      });
       el.querySelector('#shop-name-btn').addEventListener('click', () => { PS.assets.sound.play('tap'); openRename(); });
       bottomEl.querySelector('.seg').addEventListener('click', e => {
         const b = e.target.closest('[data-tab]');
@@ -342,6 +427,16 @@
   /* 新着レビューの数をお店タブに表示 */
   PS.store.subscribe(s => ui.setTabBadge('shop', PS.core.reviews.unreadCount(s)));
   PS.store.subscribe((s, reason) => { if (reason === 'upgrade' || reason === 'replace') { if (ui.currentScreen() === 'shop') renderAll(); } });
+  /* 注文が入れ替わった・ポーションができた：注文ボードを更新し、わたせる注文があればお知らせ */
+  let lastIds = null;
+  PS.store.subscribe((s, reason) => {
+    if (!['orders', 'finalize', 'order', 'replace', 'boot', 'sales'].includes(reason)) return;
+    if (ui.currentScreen() === 'shop' && ordersEl && root) renderOrders();
+    const ids = s.orders.list.map(o => o.id);
+    const arrived = lastIds !== null && reason === 'orders' && ids.some(id => !lastIds.includes(id));
+    if (arrived && ui.currentScreen() !== 'shop') ui.toast('📜 お客さんから注文が届きました');
+    lastIds = ids;
+  });
 
   /* 売れた時：お店を開いていれば演出、別の画面なら売り切れだけお知らせ */
   PS.store.subscribe((s, reason) => {
