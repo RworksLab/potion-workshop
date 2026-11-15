@@ -48,6 +48,11 @@ h1, h2, h3, p { margin: 0; }
 .inv-chip.r3 { border-color: #f0dc8a; } .inv-chip.r4 { border-color: #f8bfd9; }
 .inv-icon { width: 24px; height: 24px; display: inline-flex; }
 .inv-icon svg { width: 100%; height: 100%; }
+/* 新しいバージョンの案内（上のタイトルのすぐ下） */
+.update-bar { position: fixed; left: 50%; top: calc(var(--top-h) + var(--safe-t) + 8px); transform: translateX(-50%); z-index: 90;
+  display: flex; align-items: center; gap: 10px; white-space: nowrap; border: 0; border-radius: 999px; padding: 10px 16px;
+  background: #5b5470; color: #fff; font: inherit; font-size: 13px; box-shadow: 0 4px 14px rgba(91,84,112,.35); animation: sheetUp .3s ease-out; }
+.update-bar b { background: #f5c542; color: #5b5470; border-radius: 999px; padding: 3px 10px; font-size: 12px; }
 /* 設定画面のセレクト */
 .bgm-hint { font-size: 11.5px; color: var(--ink-soft); line-height: 1.5; margin: -2px 0 8px; }
 #bgm-song { font: inherit; font-size: 14px; color: var(--ink); background: #fff; border: 2px solid var(--line); border-radius: 10px; padding: 5px 8px; }

@@ -110,7 +110,29 @@
   function registerServiceWorker() {
     if (!('serviceWorker' in navigator)) return;
     if (!/^https?:$/.test(location.protocol)) return;
-    navigator.serviceWorker.register('./sw.js').catch(e => console.warn('Service Worker の登録に失敗', e));
+    // すでに前の版が動いていたかどうか（初めて開いたときは「新しい版」の案内を出さない）
+    const hadController = !!navigator.serviceWorker.controller;
+    navigator.serviceWorker.register('./sw.js').then(reg => {
+      // アプリに戻ってきたときにも、新しい版が出ていないか確かめる
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) reg.update().catch(() => {}); });
+    }).catch(e => console.warn('Service Worker の登録に失敗', e));
+    // 新しい版の準備ができたら、画面の下に案内を出す（タップで切り替え）
+    navigator.serviceWorker.addEventListener('controllerchange', () => { if (hadController) showUpdateBar(); });
+  }
+
+  function showUpdateBar() {
+    if (ui.$('#update-bar')) return;
+    const bar = document.createElement('button');
+    bar.id = 'update-bar';
+    bar.className = 'update-bar';
+    bar.innerHTML = '<span>✨ 新しいバージョンがあります</span><b>タップで更新</b>';
+    bar.addEventListener('click', async () => {
+      bar.disabled = true;
+      bar.querySelector('b').textContent = '更新中…';
+      await PS.store.flush();   // 遊んでいた内容を保存してから切り替える
+      location.reload();
+    });
+    document.body.appendChild(bar);
   }
 
   boot().catch(e => {

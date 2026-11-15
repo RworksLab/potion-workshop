@@ -6,7 +6,7 @@
  *   1) 下の CACHE_VERSION の数字を上げる（古いキャッシュが自動で消える）
  *   2) 新しいファイルは PRECACHE に追加する
  */
-const CACHE_VERSION = 'v1.0.0';
+const CACHE_VERSION = 'v1.0.2';
 const CACHE_NAME = 'potion-shop-' + CACHE_VERSION;
 
 const PRECACHE = [
@@ -17,6 +17,7 @@ const PRECACHE = [
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/icon-maskable-512.png',
+  './icons/apple-touch-icon.png',
   './js/namespace.js',
   './data/balance.js',
   './data/materials.js',
@@ -61,7 +62,11 @@ const PRECACHE = [
 ];
 
 self.addEventListener('install', event => {
-  event.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(PRECACHE)).then(() => self.skipWaiting()));
+  // cache:'reload'：ブラウザの一時保存を使わず、必ずサーバーから最新のファイルを取ってくる
+  // （GitHub Pages はファイルを10分ほど一時保存させるため、古いファイルが混ざらないように）
+  event.waitUntil(caches.open(CACHE_NAME)
+    .then(c => c.addAll(PRECACHE.map(u => new Request(u, { cache: 'reload' }))))
+    .then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', event => {
