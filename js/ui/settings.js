@@ -65,6 +65,7 @@
 
       <h3 class="section-title">このゲームについて</h3>
       <div class="card">
+        <button class="btn ghost wide" id="open-tutorial" style="margin:0 0 10px">📖 遊び方を見る</button>
         <p class="row">ポーションの組み合わせ <span>約${Math.round(PS.core.generator.countCombinations() / 1e8) / 100}億通り</span></p>
         <p class="row">バージョン <span>${PS.VERSION}</span></p>
       </div>
@@ -210,6 +211,7 @@
     root.querySelector('#bgm-vol').addEventListener('change', e => {
       PS.store.commit('settings', st => { st.settings.bgmVolume = Number(e.target.value); });
     });
+    root.querySelector('#open-tutorial').onclick = () => { PS.assets.sound.play('tap'); ui.tutorial.open(); };
     root.querySelector('#exp-file').onclick = exportFile;
     root.querySelector('#exp-copy').onclick = exportCopy;
     root.querySelector('#imp-file').onclick = importFile;

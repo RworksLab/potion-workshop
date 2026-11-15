@@ -87,6 +87,8 @@
     if (PS.save.repository.kind === 'memory') ui.toast('このブラウザではデータを保存できません', 4000);
     if (!res.state) await PS.store.flush(); // 初回は即保存
     if (state.pendingPotion) ui.lab.resumePending();
+    // はじめて遊ぶ人にだけ、遊び方のスライドを出す（ゲームのデータは変えない）
+    if (ui.tutorial.shouldAutoShow(!res.state)) ui.tutorial.open();
 
     // 閉じていた間の販売を反映してから、時間進行を開始
     catchUp(true);
