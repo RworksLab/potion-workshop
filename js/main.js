@@ -71,6 +71,7 @@
     PS.core.sales.ensureShelves(state);
     PS.store.replace(state);
     applySound(state.settings);
+    PS.assets.bgm.autostart();   // 設定を読んだらすぐ BGM（ブラウザが止めている場合は最初のタップで鳴る）
 
     // 画面の構築
     ui.$('#coin-icon').innerHTML = PS.assets.art.render('coin');
@@ -102,7 +103,6 @@
     // スマホの音声は最初のタップで有効化
     window.addEventListener('pointerdown', () => PS.assets.sound.unlock(), { once: true });
 
-    PS.assets.bgm.autostart();   // 開いたらすぐ BGM（ブラウザが止めている場合は最初のタップで鳴る）
     registerServiceWorker();
     PS.save.repository.requestPersist(); // データが消えにくくなるようにお願い（対応ブラウザのみ）
   }

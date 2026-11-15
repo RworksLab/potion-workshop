@@ -6,7 +6,7 @@
   const view = { filter: 'all', sort: 'new', cat: 'all' };
   const effectsOf = p => [p.generated.effect, ...(p.generated.subEffects || [])];
 
-  const FILTERS = [['all', 'すべて'], ['fav', '★お気に入り'], ['N', 'N'], ['R', 'R'], ['SR', 'SR'], ['SSR', 'SSR'], ['UR', 'UR']];
+  const FILTERS = [['all', 'すべて'], ['fav', '★お気に入り'], ['UR', 'UR'], ['SSR', 'SSR'], ['SR', 'SR'], ['R', 'R'], ['N', 'N']];   // レアなものから
   const SORTS = [['new', '新しい順'], ['old', '古い順'], ['rarity', 'レア順'], ['name', '名前順']];
 
   function filtered() {
@@ -72,9 +72,10 @@
         <button class="btn primary wide" id="d-share">📤 このポーションを共有する</button>
         ${sameCount > 1 ? `<p class="shop-note">📖 同じ内容のポーションが ${sameCount}件 登録されています</p>` : ''}
       </div>`, { cls: 'modal-detail' });
+    ui.prepareShareCard(p);   // 共有用の画像を先に作っておく
     body.querySelector('#d-share').onclick = async e => {
       const btn = e.currentTarget;
-      btn.disabled = true; btn.textContent = '画像を作っています…';
+      btn.disabled = true; btn.textContent = '共有の準備をしています…';
       PS.assets.sound.play('tap');
       await ui.sharePotion(p);
       btn.disabled = false; btn.textContent = '📤 このポーションを共有する';

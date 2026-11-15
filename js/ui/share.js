@@ -219,16 +219,43 @@
   }
 
   /* ---------- 共有する ---------- */
+  /** 画像は詳細を開いたときに先に作っておく（ボタンを押してから共有メニューが開くまでを短くするため） */
+  const cardCache = new Map();
+  function prepare(p) {
+    const key = p.id + '|' + p.name;
+    if (!cardCache.has(key)) cardCache.set(key, makeCard(p).catch(() => null));
+    return cardCache.get(key);
+  }
+
+  /**
+   * LINE や Instagram などは、画像といっしょに渡した文章を受け取らないことが多い。
+   * そこで、ボタンを押した瞬間に文章をコピーしておき、送り先で貼り付けられるようにする
+   */
+  function copyText(s) {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(s).then(() => true, () => legacyCopy(s));
+    } catch (e) { /* 下の方法で */ }
+    return Promise.resolve(legacyCopy(s));
+  }
+  function legacyCopy(s) {
+    const ta = document.createElement('textarea');
+    ta.value = s; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;top:-100px;opacity:0';
+    document.body.appendChild(ta); ta.select();
+    let ok = false; try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+    ta.remove(); return ok;
+  }
+
   async function sharePotion(p) {
-    let blob;
-    try { blob = await makeCard(p); } catch (e) { blob = null; }
     const text = shareText(p);
     const url = gameUrl();
+    const copied = copyText(text + '\n' + url);    // 押した直後にコピー（このあと待つとコピーできなくなるため）
+    const blob = await prepare(p);
     const fileName = `potion-${p.generated.rarity}-${Date.now()}.png`;
     const file = blob ? new File([blob], fileName, { type: 'image/png' }) : null;
 
     // スマホの共有メニュー（画像つき）
     if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+      if (await copied) ui.toast('文章もコピーしました。送り先で貼り付けてね', 3500);
       try { await navigator.share({ files: [file], text: text + '\n' + url }); return 'shared'; }
       catch (e) { if (e && e.name === 'AbortError') return 'cancel'; }
     }
@@ -255,6 +282,7 @@
   }
 
   ui.sharePotion = sharePotion;
+  ui.prepareShareCard = prepare;
   ui.sharePotionCard = makeCard;     // 確認用
   ui.sharePotionText = shareText;
 })(window.PS);

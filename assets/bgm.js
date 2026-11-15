@@ -240,10 +240,10 @@
     if (!ctx && !setup()) return;
     if (ctx.state === 'suspended') ctx.resume();
     resetSong(song());
-    nextBar = ctx.currentTime + 0.1;
+    nextBar = ctx.currentTime + 0.05;
     master.gain.cancelScheduledValues(ctx.currentTime);
     master.gain.setValueAtTime(Math.max(master.gain.value, 0.0001), ctx.currentTime);
-    master.gain.linearRampToValueAtTime(level(), ctx.currentTime + 1.5);
+    master.gain.linearRampToValueAtTime(level(), ctx.currentTime + 0.3);   // すぐ聞こえるように、ごく短くふわっと
     tick();
     clearInterval(timer); timer = setInterval(tick, 200);
   }
