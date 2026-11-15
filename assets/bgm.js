@@ -5,7 +5,7 @@
  *  ・音声ファイルに差し替えるときは assets/manifest.js の bgm を { type:'file', src:'…' } にする
  *  ・PS.assets.bgm.setEnabled(true/false) / setVolume(0〜1) / setSong('auto' | 'picnic' …)
  *  ・'auto' は時間帯で曲を切り替える（AUTO：朝・昼・夕方は「ピクニック」、夜は「のどかな草原」）
- *  ・スマホは最初のタップまで音を出せないので、最初のタップで始まる
+ *  ・アプリを開いたらすぐに鳴らす（autostart）。ブラウザが音を止めている場合は、最初のタップで鳴り始める
  */
 (function (PS) {
   'use strict';
@@ -62,10 +62,10 @@
     },
     /** マリンバ（ころころした木の音） */
     marimba(n, t, gain = 0.07) {
-      [[1, 1, 0.45], [4, 0.18, 0.08], [10, 0.05, 0.03]].forEach(([m, v, d]) => {
+      [[1, 1, 0.45], [4, 0.14, 0.09]].forEach(([m, v, d]) => {
         const o = ctx.createOscillator(), g = ctx.createGain();
         o.type = 'sine'; o.frequency.value = NOTE(n) * m;
-        env(g, t, 0.004, gain * v, d);
+        env(g, t, 0.006, gain * v, d);
         o.connect(g); g.connect(bus);
         o.start(t); o.stop(t + d + 0.05);
       });
@@ -83,19 +83,21 @@
       o.connect(g); g.connect(bus);
       o.start(t); lfo.start(t); o.stop(t + len + 0.05); lfo.stop(t + len + 0.05);
     },
-    /** シェイカー（しゃかしゃか） */
-    shaker(t, gain = 0.03) {
+    /** シェイカー（しゃっ、しゃっ）。耳ざわりにならないよう、帯域をしぼってふんわり鳴らす */
+    shaker(t, gain = 0.02) {
       const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
-      s.buffer = noise(); f.type = 'highpass'; f.frequency.value = 6000;
-      env(g, t, 0.005, gain, 0.06);
+      s.buffer = noise(); f.type = 'bandpass'; f.frequency.value = 7000; f.Q.value = 0.9;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.linearRampToValueAtTime(gain, t + 0.015);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
       s.connect(f); f.connect(g); g.connect(master);
-      s.start(t); s.stop(t + 0.1);
+      s.start(t, Math.random() * 0.05); s.stop(t + 0.14);
     },
     /** ウッドブロック（こんこん） */
     block(t, gain = 0.05, hi) {
       const o = ctx.createOscillator(), g = ctx.createGain();
       o.type = 'sine'; o.frequency.setValueAtTime(hi ? 1250 : 950, t); o.frequency.exponentialRampToValueAtTime(hi ? 1000 : 760, t + 0.05);
-      env(g, t, 0.002, gain, 0.07);
+      env(g, t, 0.006, gain, 0.08);
       o.connect(g); g.connect(master);
       o.start(t); o.stop(t + 0.1);
     },
@@ -146,7 +148,7 @@
         const arp = [ch[1], ch[2], ch[3], ch[2] + 12, ch[3], ch[2], ch[1] + 12, ch[3]];
         arp.forEach((n, k) => { if (k === 0 || R() < 0.85) I.marimba(n, t + k * beat / 2, k % 2 ? 0.045 : 0.065); });
         // リズム：シェイカーは裏拍、ウッドブロックは2拍目と4拍目
-        for (let k = 0; k < 8; k++) I.shaker(t + k * beat / 2, k % 2 ? 0.032 : 0.015);
+        for (let k = 0; k < 8; k++) I.shaker(t + k * beat / 2, k % 2 ? 0.02 : 0.009);
         I.block(t + beat, 0.04); I.block(t + beat * 3, 0.04, true);
         if (i % 4 === 3) I.block(t + beat * 3.5, 0.03, true);
       },
@@ -206,9 +208,13 @@
     return beat * 4;
   }
 
+  let lateCount = 0;
   function tick() {
-    const s = song();
-    while (nextBar < ctx.currentTime + 1.0) nextBar += scheduleBar(s, nextBar);
+    if (!ctx) return;
+    const s = song(), now = ctx.currentTime;
+    // 画面の処理などで予約が遅れた：過ぎた小節は鳴らさず、少し先から始め直す（音がぶつ切れになるのを防ぐ）
+    if (nextBar < now + 0.05) { lateCount++; nextBar = now + 0.15; }
+    while (nextBar < now + 2.5) nextBar += scheduleBar(s, nextBar);
   }
 
   /** 合成の準備（余韻用のディレイ） */
@@ -275,8 +281,23 @@
     stopSynth();
   }
 
-  // 最初のタップで開始（スマホの自動再生の制限のため）
-  window.addEventListener('pointerdown', () => { started = true; start(); }, { once: true, capture: true });
+  // ブラウザによっては、画面に一度ふれるまで音を出せない。最初のタップ（キー操作）で音を有効にして鳴らす
+  function onFirstGesture() {
+    ['pointerdown', 'touchend', 'keydown'].forEach(ev => window.removeEventListener(ev, onFirstGesture, true));
+    started = true;
+    const c = PS.assets.sound.context();
+    if (c && c.state !== 'running') c.resume().catch(() => {});
+    start();
+  }
+  ['pointerdown', 'touchend', 'keydown'].forEach(ev => window.addEventListener(ev, onFirstGesture, true));
+
+  /** アプリを開いたらすぐに鳴らす（ホーム画面から開いた場合など、ブラウザが許せばすぐ鳴る） */
+  function autostart() {
+    started = true;
+    const c = PS.assets.sound.context();
+    if (c && c.state !== 'running') c.resume().catch(() => {});
+    start();
+  }
   // アプリが裏に回ったら止め、戻ったら再開する
   document.addEventListener('visibilitychange', () => (document.hidden ? stop() : start()));
 
@@ -296,7 +317,10 @@
     },
     list: () => [{ id: 'auto', name: '時間で切り替え' }].concat(Object.entries(SONGS).map(([id, s]) => ({ id, name: s.name }))),
     current: () => songId,
+    autostart,
     isPlaying: () => playing,
+    audioState: () => (PS.assets.sound.context() || {}).state,
+    stats: () => ({ lateCount, scheduledUntil: ctx ? +(nextBar - ctx.currentTime).toFixed(2) : 0 }),
     /** 確認用：曲を seconds 秒ぶん書き出す（AudioBuffer を返す） */
     async renderPreview(seconds, id) {
       const keep = { ctx, master, bus, delay, barIndex, melody, songId };

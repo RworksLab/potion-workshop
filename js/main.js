@@ -102,6 +102,7 @@
     // スマホの音声は最初のタップで有効化
     window.addEventListener('pointerdown', () => PS.assets.sound.unlock(), { once: true });
 
+    PS.assets.bgm.autostart();   // 開いたらすぐ BGM（ブラウザが止めている場合は最初のタップで鳴る）
     registerServiceWorker();
     PS.save.repository.requestPersist(); // データが消えにくくなるようにお願い（対応ブラウザのみ）
   }
