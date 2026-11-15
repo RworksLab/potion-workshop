@@ -6,7 +6,7 @@
  *   1) 下の CACHE_VERSION の数字を上げる（古いキャッシュが自動で消える）
  *   2) 新しいファイルは PRECACHE に追加する
  */
-const CACHE_VERSION = 'v1.0.2';
+const CACHE_VERSION = 'v1.0.3';
 const CACHE_NAME = 'potion-shop-' + CACHE_VERSION;
 
 const PRECACHE = [
@@ -14,10 +14,10 @@ const PRECACHE = [
   './index.html',
   './manifest.webmanifest',
   './css/style.css',
-  './icons/icon-192.png',
-  './icons/icon-512.png',
-  './icons/icon-maskable-512.png',
-  './icons/apple-touch-icon.png',
+  './icons/icon-192-v2.png',
+  './icons/icon-512-v2.png',
+  './icons/icon-maskable-512-v2.png',
+  './icons/apple-touch-icon-v2.png',
   './js/namespace.js',
   './data/balance.js',
   './data/materials.js',

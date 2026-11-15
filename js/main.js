@@ -111,13 +111,14 @@
     if (!('serviceWorker' in navigator)) return;
     if (!/^https?:$/.test(location.protocol)) return;
     // すでに前の版が動いていたかどうか（初めて開いたときは「新しい版」の案内を出さない）
-    const hadController = !!navigator.serviceWorker.controller;
+    let hadController = !!navigator.serviceWorker.controller;
     navigator.serviceWorker.register('./sw.js').then(reg => {
       // アプリに戻ってきたときにも、新しい版が出ていないか確かめる
       document.addEventListener('visibilitychange', () => { if (!document.hidden) reg.update().catch(() => {}); });
     }).catch(e => console.warn('Service Worker の登録に失敗', e));
     // 新しい版の準備ができたら、画面の下に案内を出す（タップで切り替え）
-    navigator.serviceWorker.addEventListener('controllerchange', () => { if (hadController) showUpdateBar(); });
+    // （初めて開いた画面のままでも、その後に新しい版が出たら案内する）
+    navigator.serviceWorker.addEventListener('controllerchange', () => { if (hadController) showUpdateBar(); hadController = true; });
   }
 
   function showUpdateBar() {
