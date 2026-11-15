@@ -73,8 +73,42 @@
         <button class="btn ghost" id="lab-clear">クリア</button>
         <button class="btn primary big" id="lab-brew">⚗️ 調合する</button>
       </div>`;
-    footEl.querySelector('#lab-clear').onclick = () => { selection = {}; renderList(); renderFoot(); };
+    // 何も入れていないときは「おまかせ」（ランダムに入れる）、入れているときは「クリア」
+    footEl.querySelector('#lab-clear').onclick = () => {
+      if (total()) selection = {};
+      else { randomFill(); PS.assets.sound.play('plus'); }
+      renderList(); renderFoot();
+    };
     footEl.querySelector('#lab-brew').onclick = brew;
+  }
+
+  /**
+   * おまかせ投入：持っている素材から1〜5種類を選び、調合釜がいっぱいになるまでランダムに入れる
+   * （選んだ素材が足りないときは種類を足す。全部合わせても足りないときは、持っている分だけ）
+   */
+  function randomFill() {
+    const inv = PS.store.state.inventory;
+    const rng = PS.core.rng.fresh();
+    const owned = PS.data.materials.filter(m => inv[m.id] > 0).map(m => m.id);
+    if (!owned.length) return;
+    const kinds = Math.min(owned.length, rng.int(1, 5));
+    const pool = [];
+    while (pool.length < kinds) { const id = rng.pick(owned); if (!pool.includes(id)) pool.push(id); }
+    selection = {};
+    let room = cap();
+    while (room > 0) {
+      let left = pool.filter(id => (selection[id] || 0) < inv[id]);
+      if (!left.length) {
+        // 選んだ素材を使い切ったら、ほかの素材を1種類足して、調合釜がいっぱいになるまで続ける
+        const more = owned.filter(id => !pool.includes(id));
+        if (!more.length) break;
+        pool.push(rng.pick(more));
+        left = pool.filter(id => (selection[id] || 0) < inv[id]);
+      }
+      const id = rng.pick(left);
+      selection[id] = (selection[id] || 0) + 1;
+      room--;
+    }
   }
 
   function renderFoot() {
@@ -83,7 +117,10 @@
     footEl.querySelector('#lab-cap-bar').style.width = Math.min(100, t / cap() * 100) + '%';
     footEl.querySelector('#lab-cap-text').innerHTML =
       `投入 <b>${t}</b> / ${cap()}　できる本数 <b>${t ? PS.core.brew.yieldCount(t) : 0}</b>本`;
-    footEl.querySelector('#lab-clear').disabled = !t;
+    const hasMats = PS.data.materials.some(m => PS.store.state.inventory[m.id] > 0);
+    const clr = footEl.querySelector('#lab-clear');
+    clr.textContent = t ? 'クリア' : 'おまかせ';
+    clr.disabled = !t && !hasMats;
     footEl.querySelector('#lab-brew').disabled = !v.ok;
   }
 
