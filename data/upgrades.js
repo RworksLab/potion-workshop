@@ -53,14 +53,14 @@ PS.data.upgrades = [
 
   // ── 調合室 ──
   { id: 'cauldron', category: 'lab', icon: '⚗️', name: '調合釜',
-    desc: '一度に入れられる材料の数が増え、1回でできる本数も増える',
+    desc: '一度に入れられる材料の数が増える。たくさん入れるほど、できる本数（最大5本）が増え、珍しいポーションもできやすくなる',
     maxLevel: 10, cost: { steps: [200, 400, 700, 1100, 1600, 2300, 3200, 4400, 6000, 8000] },
     effect: { stat: 'cauldronCap', mode: 'add', per: 5 }, fmt: 'cap' },
 
   // ── お店 ──
   { id: 'shelf', category: 'shop', icon: '🗄️', name: '商品棚',
     desc: '同時に並べられるポーションの数が増える',
-    maxLevel: 5, cost: { steps: [500, 1200, 2400, 4200, 7000] },
+    maxLevel: 6, cost: { steps: [500, 1200, 2400, 4200, 7000, 11000] },   // 3段 → 最大9段
     effect: { stat: 'shelfSlots', mode: 'add', per: 1 }, fmt: 'shelves' },
 
   { id: 'shop_expand', category: 'shop', icon: '🏠', name: '店舗拡張',

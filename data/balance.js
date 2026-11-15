@@ -21,7 +21,7 @@ PS.data.balance = {
     cauldronCap: 5,      // 調合釜に入れられる最大数（能力値の基本値。調合釜の強化で増える）
     yieldBase: 1,        // 1回の調合でできる本数の基本値
     yieldPerQty: 4,      // 投入数がこの数ごとに +1本
-    yieldMax: 4,         // 1回の最大本数
+    yieldMax: 5,         // 1回の最大本数（材料16個で5本）
   },
 
   generator: {
