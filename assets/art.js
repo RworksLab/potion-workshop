@@ -373,21 +373,41 @@
     return `linear-gradient(${lq.dir === 'diagonal' ? '135deg' : '180deg'}, ${lq.colors.join(', ')})`;
   }
 
+  /*
+   * 質感の動き（液体の中に描くもの）。動きは CSS の .fx-○○ で付ける
+   *  さらさら：水面が波打つ / とろとろ：ゆっくりたぷんと揺れて、しずくが垂れる / しゅわしゅわ：泡が次々のぼる
+   *  ぷるぷる：液体ごとぷるんと揺れる / きらきら：粒がまたたきながら舞う / もこもこ泡：泡がふくらんだりしぼんだり
+   *  二層：境目がゆらゆら / うずまき：渦がゆっくり回る / ぼんやり発光：光が明るくなったり暗くなったり / ねばねば：糸を引いて伸びる
+   */
+  const wave = (top, cls, amp, op) => {
+    let d = `M-32 ${top}`;
+    for (let x = -32; x < 72; x += 8) d += ` q2 ${-amp} 4 0 t4 0`;
+    return `<path class="${cls}" d="${d} V${top + 5} H-32Z" fill="#fff" opacity="${op}"/>`;
+  };
   function fxLayer(fx, top) {
     switch (fx) {
-      case 'bubbles': return `<g class="fx-bubbles" fill="#fff" opacity=".7"><circle cx="26" cy="50" r="1.8"/><circle cx="35" cy="54" r="1.4"/><circle cx="31" cy="46" r="1.1"/></g>`;
-      case 'sparkles': return `<g fill="#fff"><circle cx="24" cy="44" r="1"/><circle cx="38" cy="40" r="1.3"/><circle cx="32" cy="52" r="0.9"/><circle cx="41" cy="50" r="1"/><circle cx="27" cy="36" r=".8"/></g>`;
-      case 'foam': return `<g fill="#fff" opacity=".85"><circle cx="24" cy="${top}" r="4"/><circle cx="31" cy="${top - 1}" r="4.5"/><circle cx="38" cy="${top}" r="4"/></g>`;
-      case 'layers': return `<rect x="0" y="${(top + 60) / 2}" width="64" height="40" fill="#000" opacity=".18"/>`;
-      case 'swirl': return `<path d="M32 46 a3 3 0 1 1 3 -3 a6 6 0 1 1 -8 6 a9 9 0 1 1 14 -10" stroke="#fff" stroke-width="1.3" fill="none" opacity=".55"/>`;
-      case 'glow': return `<circle cx="32" cy="44" r="10" fill="#fff" opacity=".35"/>`;
+      case 'smooth': return wave(top, 'fx-wave', 1.8, .5);
+      case 'thick': return wave(top, 'fx-wave slow', 2.4, .45) + `<ellipse class="fx-drip" cx="22" cy="${top + 3}" rx="1.6" ry="2.2" fill="#fff" opacity=".55"/>`;
+      case 'bubbles': return `<g class="fx-bubbles" fill="#fff" opacity=".75"><circle cx="24" cy="56" r="1.8"/><circle cx="35" cy="58" r="1.4"/><circle cx="30" cy="54" r="1.1"/><circle cx="39" cy="55" r="1.2"/><circle cx="27" cy="58" r=".9"/></g>`;
+      case 'sparkles': return `<g class="fx-sparkles" fill="#fff"><circle cx="24" cy="44" r="1.1"/><circle cx="38" cy="40" r="1.3"/><circle cx="32" cy="52" r="1"/><circle cx="41" cy="50" r="1.1"/><circle cx="27" cy="38" r=".9"/><circle cx="34" cy="46" r=".8"/></g>`;
+      case 'foam': return `<g class="fx-foam" fill="#fff" opacity=".88"><circle cx="24" cy="${top}" r="4"/><circle cx="31" cy="${top - 1}" r="4.5"/><circle cx="38" cy="${top}" r="4"/><circle cx="20" cy="${top + 1}" r="2.6"/><circle cx="43" cy="${top + 1}" r="2.6"/></g>`;
+      case 'layers': return `<path class="fx-layer" d="M-16 ${(top + 60) / 2} q4 -2 8 0 t8 0 t8 0 t8 0 t8 0 t8 0 t8 0 t8 0 t8 0 t8 0 t8 0 V70 H-16Z" fill="#000" opacity=".18"/>`;
+      case 'swirl': return `<path class="fx-swirl" d="M32 46 a3 3 0 1 1 3 -3 a6 6 0 1 1 -8 6 a9 9 0 1 1 14 -10" stroke="#fff" stroke-width="1.4" fill="none" opacity=".6"/>`;
+      case 'glow': return `<circle class="fx-glow" cx="32" cy="46" r="11" fill="#fff" opacity=".4"/>`;
+      case 'sticky': return wave(top, 'fx-wave slow', 1.6, .25) + `<path class="fx-string" d="M27 ${top} q1 6 0 12" stroke="#fff" stroke-width="1.3" fill="none" stroke-linecap="round" opacity=".55"/><path class="fx-string d2" d="M37 ${top} q-1 5 0 9" stroke="#fff" stroke-width="1.1" fill="none" stroke-linecap="round" opacity=".45"/>`;
       default: return '';
     }
   }
 
+  /** 質感 → 動きの種類（data/looks.js の fx が none のものは、質感ごとに動きを決める） */
+  function texFx(tex) {
+    if (tex.fx && tex.fx !== 'none') return tex.fx;
+    return { smooth: 'smooth', thick: 'thick', sticky: 'sticky', jelly: 'smooth' }[tex.id] || 'none';
+  }
+
   function outerFx(fx) {
-    if (fx === 'steam') return `<g class="fx-steam" stroke="#fff" stroke-width="1.6" fill="none" opacity=".8" stroke-linecap="round"><path d="M26 4 q-3 -3 0 -6"/><path d="M38 4 q3 -3 0 -6"/></g>`;
-    if (fx === 'mist') return `<g fill="#e6f4f8" opacity=".75"><ellipse cx="18" cy="56" rx="8" ry="3"/><ellipse cx="46" cy="57" rx="9" ry="3"/></g>`;
+    if (fx === 'steam') return `<g class="fx-steam" stroke="#d9cfe6" stroke-width="1.8" fill="none" opacity=".9" stroke-linecap="round"><path d="M26 4 q-3 -3 0 -6"/><path d="M32 3 q3 -3 0 -6"/><path d="M38 4 q3 -3 0 -6"/></g>`;
+    if (fx === 'mist') return `<g class="fx-mist" fill="#e6f4f8" opacity=".75"><ellipse cx="18" cy="56" rx="8" ry="3"/><ellipse cx="46" cy="57" rx="9" ry="3"/><ellipse cx="32" cy="59" rx="7" ry="2.4"/></g>`;
     return '';
   }
 
@@ -410,9 +430,10 @@
     const inner =
       `<defs>${lq.defs}<clipPath id="${clip}"><path d="${sh.d}"/></clipPath></defs>` + aura +
       `<path d="${sh.d}" fill="#ffffff" fill-opacity=".6"/>` +
-      `<g clip-path="url(#${clip})"><rect x="0" y="${sh.top}" width="64" height="40" fill="${lq.fill}"/>` + lq.over +
+      `<g clip-path="url(#${clip})"><g class="fx-liquid ${tex && tex.fx === 'none' && tex.id === 'jelly' ? 'fx-jelly' : ''}">` +
+      `<rect x="0" y="${sh.top}" width="64" height="40" fill="${lq.fill}"/>` + lq.over +
       `<rect x="0" y="${sh.top}" width="64" height="2.5" fill="#fff" opacity=".35"/>` +
-      fxLayer(tex && tex.fx, sh.top) + `</g>` +
+      fxLayer(tex ? texFx(tex) : '', sh.top) + `</g></g>` +
       `<path d="${sh.d}" fill="none" stroke="#5b5470" stroke-width="2" stroke-linejoin="round"/>` +
       `<ellipse cx="${hx}" cy="${hy}" rx="${hrx}" ry="${hry}" fill="#fff" opacity=".6"/>` +
       `<rect x="${cx}" y="${cy}" width="${cw}" height="${ch}" rx="2" fill="#c98b5a" stroke="#8a5a3a" stroke-width="1.2"/>` +

@@ -815,3 +815,35 @@ input[type=range] { accent-color: var(--green); width: 55%; }
 .memory em { font-style: normal; font-size: 10px; color: var(--ink-soft); margin-top: 2px; }
 .memory.on { background: #fffaf0; color: var(--ink); border: 2px solid #f3e2b0; }
 .memory.on small { color: var(--ink-soft); }
+
+/* ---------- ポーションの質感の動き（assets/art.js の fxLayer / outerFx） ---------- */
+.potion-art * { transform-box: fill-box; }
+.fx-wave { animation: fxWave 1.8s linear infinite; transform-box: view-box; }
+.fx-wave.slow { animation-duration: 3.6s; }
+@keyframes fxWave { from { transform: translateX(0); } to { transform: translateX(8px); } }
+.fx-drip { transform-origin: 50% 0; animation: fxDrip 3.6s ease-in infinite; }
+@keyframes fxDrip { 0%, 30% { transform: translateY(0) scaleY(1); opacity: 0; } 40% { opacity: .6; } 70% { transform: translateY(6px) scaleY(1.6); opacity: .6; } 100% { transform: translateY(16px) scaleY(1); opacity: 0; } }
+.fx-bubbles circle:nth-child(4) { animation-delay: .3s; } .fx-bubbles circle:nth-child(5) { animation-delay: .9s; }
+.fx-sparkles circle { transform-origin: 50% 50%; animation: fxTwinkle 2.2s ease-in-out infinite; }
+.fx-sparkles circle:nth-child(2) { animation-delay: -.4s; } .fx-sparkles circle:nth-child(3) { animation-delay: -.8s; }
+.fx-sparkles circle:nth-child(4) { animation-delay: -1.2s; } .fx-sparkles circle:nth-child(5) { animation-delay: -1.6s; } .fx-sparkles circle:nth-child(6) { animation-delay: -2s; }
+@keyframes fxTwinkle { 0%, 100% { opacity: .2; transform: translateY(0) scale(.6); } 50% { opacity: 1; transform: translateY(-3px) scale(1.25); } }
+.fx-foam circle { transform-origin: 50% 50%; animation: fxFoam 2.4s ease-in-out infinite; }
+.fx-foam circle:nth-child(2) { animation-delay: -.8s; } .fx-foam circle:nth-child(3) { animation-delay: -1.6s; } .fx-foam circle:nth-child(4) { animation-delay: -.4s; } .fx-foam circle:nth-child(5) { animation-delay: -1.2s; }
+@keyframes fxFoam { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.15); } }
+.fx-layer { animation: fxWave 3.2s linear infinite; transform-box: view-box; }
+.fx-swirl { transform-origin: 50% 50%; animation: fxSpin 7s linear infinite; }
+@keyframes fxSpin { to { transform: rotate(360deg); } }
+.fx-glow { transform-origin: 50% 50%; animation: fxGlow 2.6s ease-in-out infinite; }
+@keyframes fxGlow { 0%, 100% { opacity: .2; transform: scale(.85); } 50% { opacity: .6; transform: scale(1.15); } }
+.fx-string { transform-origin: 50% 0; animation: fxString 3s ease-in-out infinite; }
+.fx-string.d2 { animation-delay: -1.4s; }
+@keyframes fxString { 0%, 100% { transform: scaleY(.4); opacity: .2; } 55% { transform: scaleY(1.2); opacity: .6; } 75% { transform: scaleY(1.25); opacity: 0; } }
+.fx-mist ellipse { animation: fxMist 4.5s ease-in-out infinite alternate; }
+.fx-mist ellipse:nth-child(2) { animation-delay: -1.5s; } .fx-mist ellipse:nth-child(3) { animation-delay: -3s; }
+@keyframes fxMist { 0% { transform: translateX(-3px); opacity: .45; } 100% { transform: translateX(3px); opacity: .9; } }
+.fx-steam path:nth-child(2) { animation-delay: .7s; } .fx-steam path:nth-child(3) { animation-delay: 1.4s; }
+.fx-jelly { transform-box: view-box; transform-origin: 32px 62px; animation: fxJelly 2s ease-in-out infinite; }
+@keyframes fxJelly { 0%, 60%, 100% { transform: scale(1, 1); } 68% { transform: scale(1.05, .93); } 76% { transform: scale(.97, 1.05); } 84% { transform: scale(1.02, .98); } }
+@media (prefers-reduced-motion: reduce) { .potion-art * { animation: none !important; } }
+.fx-aura { transform-box: view-box; }
