@@ -69,8 +69,16 @@
           <button class="btn ghost small" id="d-rename">✏️ 名前を変える</button>
           <button class="btn ghost small fav-btn ${p.favorite ? 'on' : ''}" id="d-fav">${p.favorite ? '★ お気に入り' : '☆ お気に入り'}</button>
         </div>
+        <button class="btn primary wide" id="d-share">📤 このポーションを共有する</button>
         ${sameCount > 1 ? `<p class="shop-note">📖 同じ内容のポーションが ${sameCount}件 登録されています</p>` : ''}
       </div>`, { cls: 'modal-detail' });
+    body.querySelector('#d-share').onclick = async e => {
+      const btn = e.currentTarget;
+      btn.disabled = true; btn.textContent = '画像を作っています…';
+      PS.assets.sound.play('tap');
+      await ui.sharePotion(p);
+      btn.disabled = false; btn.textContent = '📤 このポーションを共有する';
+    };
     body.querySelector('#d-fav').onclick = e => {
       const on = PS.store.commit('favorite', s => PS.core.brew.toggleFavorite(s, id));
       e.currentTarget.classList.toggle('on', on);

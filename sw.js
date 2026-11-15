@@ -6,7 +6,7 @@
  *   1) 下の CACHE_VERSION の数字を上げる（古いキャッシュが自動で消える）
  *   2) 新しいファイルは PRECACHE に追加する
  */
-const CACHE_VERSION = 'v1.0.6';
+const CACHE_VERSION = 'v1.0.7';
 const CACHE_NAME = 'potion-shop-' + CACHE_VERSION;
 
 const PRECACHE = [
@@ -55,6 +55,7 @@ const PRECACHE = [
   './js/ui/garden.js',
   './js/ui/lab.js',
   './js/ui/codex.js',
+  './js/ui/share.js',
   './js/ui/shop.js',
   './js/ui/upgrade.js',
   './js/ui/settings.js',
