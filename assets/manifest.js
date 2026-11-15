@@ -53,6 +53,17 @@ PS.assets.manifest = {
     nav_shop:    { type: 'svg', draw: 'navIcon', params: { name: 'shop' } },
     nav_upgrade: { type: 'svg', draw: 'navIcon', params: { name: 'upgrade' } },
 
+    // 強化の一覧のアイコン（キーは up_ ＋ 強化のID。ない強化は data/upgrades.js の絵文字を使う）
+    up_field_expand: { type: 'svg', draw: 'upgradeIcon', params: { name: 'field_expand' } },
+    up_gather_speed: { type: 'svg', draw: 'upgradeIcon', params: { name: 'gather_speed' } },
+    up_gather_amount: { type: 'svg', draw: 'upgradeIcon', params: { name: 'gather_amount' } },
+    up_auto_gather: { type: 'svg', draw: 'upgradeIcon', params: { name: 'auto_gather' } },
+    up_rare_rate: { type: 'svg', draw: 'upgradeIcon', params: { name: 'rare_rate' } },
+    up_gather_area: { type: 'svg', draw: 'upgradeIcon', params: { name: 'gather_area' } },
+    up_cauldron: { type: 'svg', draw: 'upgradeIcon', params: { name: 'cauldron' } },
+    up_shelf: { type: 'svg', draw: 'upgradeIcon', params: { name: 'shelf' } },
+    up_shop_expand: { type: 'svg', draw: 'upgradeIcon', params: { name: 'shop_expand' } },
+
     // 薬草園の景色と、たまに遊びに来る生き物（data/gardenEvents.js の art から参照）
     garden_sky:        { type: 'svg', draw: 'gardenSky', params: {} },
     visitor_butterfly: { type: 'svg', draw: 'butterfly', params: {} },

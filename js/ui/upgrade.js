@@ -33,7 +33,7 @@
     const can = !max && s.coins >= cost;
     const pips = Array.from({ length: u.maxLevel }, (_, i) => `<i class="${i < lv ? 'on' : ''}"></i>`).join('');
     return `<div class="up-card ${max ? 'max' : ''} ${can ? 'can' : ''}" data-id="${u.id}">
-      <span class="up-icon">${u.icon}</span>
+      <span class="up-icon">${PS.assets.manifest.art['up_' + u.id] ? PS.assets.art.render('up_' + u.id) : u.icon}</span>
       <div class="up-body">
         <div class="up-title"><b>${ui.esc(u.name)}</b><span class="up-lv">Lv.${lv}${max ? ' MAX' : ` / ${u.maxLevel}`}</span></div>
         <p class="up-desc">${ui.esc(u.desc)}</p>

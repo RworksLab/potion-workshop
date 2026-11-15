@@ -11,7 +11,7 @@
  *   index.html をダブルクリックするだけ（file://）でも動作確認できるようにするため。
  */
 window.PS = window.PS || {
-  VERSION: '1.0.4',
+  VERSION: '1.0.5',
   data: {},
   assets: {},
   core: {},

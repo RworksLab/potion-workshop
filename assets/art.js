@@ -181,6 +181,64 @@
         <path d="M26 14 q-3 -6 -7 -6 M38 14 q3 -6 7 -6" stroke="#5b5470" stroke-width="1.6" fill="none"/>
         <ellipse cx="26" cy="30" rx="4" ry="2" fill="#fff" opacity=".5"/>`);
     },
+    /* ---------- 強化の一覧のアイコン（紫の縁取り＋パステル、48×48） ---------- */
+    upgradeIcon(p) {
+      const K = '#5b5470', W = 2.6;
+      const st = (fill, w = W) => `fill="${fill}" stroke="${K}" stroke-width="${w}" stroke-linejoin="round" stroke-linecap="round"`;
+      const sprout = (x, y, s = 1) => `<g transform="translate(${x} ${y}) scale(${s})"><path d="M0 0 V-6" stroke="${K}" stroke-width="2.2" stroke-linecap="round"/>
+        <path d="M0 -4 C-5 -4 -7 -7 -7 -10 C-3 -10 0 -8 0 -4Z" ${st('#8fd6a8', 2)}/><path d="M0 -5 C0 -9 3 -12 7 -12 C7 -8 4 -5 0 -5Z" ${st('#6cc38a', 2)}/></g>`;
+      const spark = (x, y, r, c = '#ffd75e') => `<path d="M${x} ${y - r} Q${x} ${y} ${x + r} ${y} Q${x} ${y} ${x} ${y + r} Q${x} ${y} ${x - r} ${y} Q${x} ${y} ${x} ${y - r}Z" fill="${c}"/>`;
+      const bottle = (x, y, c, s = 1) => `<g transform="translate(${x} ${y}) scale(${s})"><path d="M-2.6 -11 V-6.4 A6.4 6.4 0 1 0 2.6 -6.4 V-11Z" ${st('#fff', 2.2)}/>
+        <path d="M-5.4 -1.4 Q-2.6 -3 0 -1.4 T5.4 -1.4 A5.6 5.6 0 0 1 -5.4 -1.4Z" fill="${c}"/><path d="M-2.6 -11 V-6.4 A6.4 6.4 0 1 0 2.6 -6.4 V-11Z" fill="none" stroke="${K}" stroke-width="2.2" stroke-linejoin="round"/>
+        <rect x="-3.8" y="-14.4" width="7.6" height="4" rx="1.4" ${st('#d39a6a', 1.8)}/></g>`;
+      const D = {
+        // 畑の拡張：土の畑に芽、右上に「広がる」矢印
+        field_expand: `<rect x="5" y="20" width="30" height="22" rx="6" ${st('#c9946a')}/><path d="M11 31 H29 M11 36.5 H29" stroke="#a97650" stroke-width="2" stroke-linecap="round"/>
+          ${sprout(14, 29, .9)}${sprout(26, 29, .9)}
+          <path d="M33 15 L42 6 M35 6 H42 V13" fill="none" stroke="#6cc38a" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>`,
+        // 採取速度：ストップウォッチ
+        gather_speed: `<rect x="20.5" y="4" width="7" height="5" rx="1.6" ${st('#b48be8')}/><path d="M35 10 L38 7" stroke="${K}" stroke-width="${W}" stroke-linecap="round"/>
+          <circle cx="24" cy="27" r="16" ${st('#fff')}/><circle cx="24" cy="27" r="11.5" fill="#e8dcfb"/>
+          <path d="M24 27 V18.5 M24 27 L30 30.5" stroke="${K}" stroke-width="2.6" stroke-linecap="round"/><circle cx="24" cy="27" r="2" fill="${K}"/>
+          <path d="M3 22 H9 M2 28 H8 M4 34 H9" stroke="#b48be8" stroke-width="2.2" stroke-linecap="round"/>`,
+        // 採取量：薬草がいっぱいのかご
+        gather_amount: `<path d="M14 21 C14 10 34 10 34 21" fill="none" stroke="${K}" stroke-width="${W}" stroke-linecap="round"/>
+          <path d="M12 16 C8 10 10 6 14 5 C17 8 16 13 12 16Z" ${st('#8fd6a8', 2.2)}/><path d="M21 15 C19 8 22 4 26 4 C27 9 25 13 21 15Z" ${st('#6cc38a', 2.2)}/>
+          <path d="M30 17 C32 11 36 9 40 10 C39 15 35 18 30 17Z" ${st('#8fd6a8', 2.2)}/><circle cx="34" cy="13" r="3" ${st('#f59bc0', 2)}/>
+          <path d="M6 20 H42 L38 41 A3 3 0 0 1 35 43.4 H13 A3 3 0 0 1 10 41Z" ${st('#e9c08f')}/>
+          <path d="M9 27 H39 M10.5 34 H37.5 M18 21 L19 43 M30 21 L29 43" stroke="#c9946a" stroke-width="2" stroke-linecap="round"/>`,
+        // 自動採取：お手伝い妖精
+        auto_gather: `<path d="M22 22 C14 10 4 14 6 22 C7 28 16 28 22 25Z" ${st('#d6ecfa', 2.2)}/><path d="M26 22 C34 10 44 14 42 22 C41 28 32 28 26 25Z" ${st('#d6ecfa', 2.2)}/>
+          <path d="M17 42 C17 32 20 27 24 27 C28 27 31 32 31 42Z" ${st('#c9b3ff')}/>
+          <circle cx="24" cy="19" r="7.5" ${st('#ffe8d6')}/><path d="M16.8 17 C17 10 31 10 31.2 17 C28 14 20 14 16.8 17Z" ${st('#f3c97a', 2)}/>
+          <circle cx="21.4" cy="20" r="1.2" fill="${K}"/><circle cx="26.6" cy="20" r="1.2" fill="${K}"/><path d="M22.4 23 Q24 24.4 25.6 23" fill="none" stroke="${K}" stroke-width="1.4" stroke-linecap="round"/>
+          <path d="M33 34 L40 27" stroke="${K}" stroke-width="2.2" stroke-linecap="round"/>${spark(41.5, 25.5, 4.5)}${spark(8, 36, 2.6, '#f59bc0')}`,
+        // レア素材出現率：きらきら光る星の花
+        rare_rate: `${spark(14, 13, 7, '#ffd75e')}${spark(39, 37, 4.5, '#f59bc0')}
+          <path d="M28 8 L31.3 16.6 L40.4 17.1 L33.3 22.9 L35.7 31.8 L28 26.8 L20.3 31.8 L22.7 22.9 L15.6 17.1 L24.7 16.6Z" transform="translate(-2 6)" ${st('#fff3a6')}/>
+          <circle cx="26" cy="26" r="3.2" fill="#ffc94a"/><path d="M8 40 H18" stroke="#c9b3ff" stroke-width="2.2" stroke-linecap="round"/>`,
+        // 採取範囲：となりのマスもいっしょに
+        gather_area: `<rect x="4" y="10" width="17" height="17" rx="4" ${st('#c9946a')}/><rect x="27" y="10" width="17" height="17" rx="4" ${st('#c9946a')}/>
+          <rect x="4" y="31" width="17" height="13" rx="4" ${st('#e9dccb')}/><rect x="27" y="31" width="17" height="13" rx="4" ${st('#e9dccb')}/>
+          ${sprout(12.5, 23, .85)}${sprout(35.5, 23, .85)}
+          <path d="M18 6 Q24 1 30 6" fill="none" stroke="#6cc38a" stroke-width="2.6" stroke-linecap="round"/><path d="M27.6 3.4 L30 6 L26.8 6.8" fill="none" stroke="#6cc38a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>`,
+        // 調合釜：ぐつぐつの大鍋
+        cauldron: `<circle cx="19" cy="12" r="3.4" ${st('#b8f0c8', 2)}/><circle cx="28" cy="7" r="4.4" ${st('#b8f0c8', 2)}/><circle cx="34" cy="14" r="2.4" ${st('#b8f0c8', 1.8)}/>
+          <path d="M7 21 Q5 40 24 41.5 Q43 40 41 21Z" ${st('#7a7097')}/><path d="M12 26 Q12 34 18 37" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" opacity=".3"/>
+          <ellipse cx="24" cy="21" rx="19" ry="5.4" ${st('#8a80a8')}/><ellipse cx="24" cy="21" rx="15" ry="3.4" fill="#8fe0a8"/>
+          <path d="M14 41 L12 45 M34 41 L36 45" stroke="${K}" stroke-width="${W}" stroke-linecap="round"/>`,
+        // 商品棚：木の棚に瓶
+        shelf: `<rect x="4" y="5" width="40" height="38" rx="5" ${st('#e2b07f')}/><rect x="8.5" y="9" width="31" height="30" rx="2.5" fill="#f6dfc4"/>
+          <path d="M8.5 24 H39.5" stroke="${K}" stroke-width="${W}" stroke-linecap="round"/>
+          ${bottle(16, 22, '#f59bc0', .78)}${bottle(31, 22, '#8fd6ee', .78)}${bottle(16, 37.6, '#ffd36b', .78)}${bottle(31, 37.6, '#b48be8', .78)}`,
+        // 店舗拡張：屋根付きのお店と上向き矢印
+        shop_expand: `<path d="M7 22 V42 H35 V22" ${st('#fff7ea')}/><path d="M4 21 L8 11 H34 L38 21 A3.4 3.4 0 0 1 31.2 21 A3.4 3.4 0 0 1 24.4 21 A3.4 3.4 0 0 1 17.6 21 A3.4 3.4 0 0 1 10.8 21 A3.4 3.4 0 0 1 4 21Z" ${st('#f8b8d0')}/>
+          <path d="M13 11 L12 21 M21 11 V21 M29 11 L30 21" stroke="#fff" stroke-width="2" opacity=".7"/>
+          <path d="M17 42 V33 A4 4 0 0 1 25 33 V42" ${st('#e2b07f')}/><rect x="9.5" y="26" width="6" height="6" rx="1.4" ${st('#d6ecfa', 2)}/>
+          <circle cx="38" cy="10" r="7.5" fill="#6cc38a"/><path d="M38 14 V6.5 M34.6 9.6 L38 6.2 L41.4 9.6" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>`,
+      };
+      return svg(D[p.name] || '', '0 0 48 48', 'up-icon-art');
+    },
     cauldron() {
       return svg(`<ellipse cx="60" cy="40" rx="42" ry="10" fill="#4a4358"/>` +
         `<path d="M18 40 Q14 86 40 92 H80 Q106 86 102 40Z" fill="#5b5470"/>` +
