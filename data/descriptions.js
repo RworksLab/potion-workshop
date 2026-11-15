@@ -1,0 +1,130 @@
+/*
+ * 説明文の部品
+ * 生成時に「書き出し」+「効果」+（副効果）+（味・香り）+（組み合わせ/レア/ジョーク）を組み合わせる。
+ *
+ * 使える差し込み記号:
+ *  {color} 色 / {texAdj} 質感（〜の）/ {bottle} 瓶 / {effect} 効果名 / {adv} 強さの副詞 /
+ *  {effText} 効果の文 / {subText} 副効果の文 / {taste} 味 / {aroma} 香り /
+ *  {tasteLine} 味の一文 / {aromaLine} 香りの一文
+ */
+PS.data.descriptions = {
+  openers: [
+    '{texAdj}{color}の液体。',
+    '{bottle}に詰められた、{texAdj}{color}の薬。',
+    '{color}の液体がゆらめく、{texAdj}一本。',
+    '光にかざすと{color}の液体がきらめく、{texAdj}ポーション。',
+    '{bottle}の中で、{texAdj}{color}の液体がゆれている。',
+    'ふたを開けると{texAdj}{color}の中身がのぞく。',
+  ],
+  effectLines: [
+    '飲むと{adv}{effText}。',
+    'ひと口で{adv}{effText}らしい。',
+    '{adv}{effText}と評判。',
+    '一滴なめるだけで{adv}{effText}。',
+  ],
+  /* 副効果の一文：副効果の良し悪し（good / bad / odd）で言い回しを変える */
+  subLines: {
+    good: ['おまけに{subText}。', 'ついでに{subText}こともある。', 'うれしいことに{subText}。'],
+    bad:  ['ただし副作用で{subText}。', 'そのかわり{subText}のが玉にきず。', '困ったことに{subText}。'],
+    odd:  ['まれに{subText}という報告も。', 'なぜか{subText}。', '理由は不明だが{subText}。'],
+  },
+  sub2Lines: {
+    good: ['さらに{sub2Text}ことも。', 'そのうえ{sub2Text}というおまけ付き。'],
+    bad:  ['しかも{sub2Text}という困った噂まである。', 'さらに悪いことに{sub2Text}。'],
+    odd:  ['そのうえ、ごくたまに{sub2Text}。', 'ついでに、なぜか{sub2Text}。'],
+  },
+  senseLines: [
+    '{tasteLine}',
+    '{aromaLine}',
+    '味は{taste}、香りは{aroma}。',
+    '{tasteLine}{aromaLine}',
+  ],
+  rarityLines: {
+    SR:  ['なかなかの出来栄え。', '常連さんが目を丸くしそうな一本。'],
+    SSR: ['熟練の薬師でもめったに作れない逸品。', '棚に置くだけでお店が華やぐ。'],
+    UR:  ['伝説の薬師が見たら泣いて喜ぶ奇跡の一本。', 'この世に二つとないかもしれない。', '見ているだけで寿命がのびそう。'],
+  },
+  jokes: [
+    '飲んだあとの責任は取れません。',
+    '猫が近寄ってこなくなるという噂も。',
+    '用法・用量を守って正しく飲みましょう。',
+    '店主は怖くてまだ飲んでいない。',
+    '冷やして飲むとさらにおいしい（かもしれない）。',
+    '試飲したカエルは満足そうだった。',
+    'ラベルの文字がなぜか毎日変わる。',
+    '夜中にひとりでにふたが開くことがある。',
+    '振ると小さく「やめて」と聞こえる。',
+    'おばあちゃんの知恵袋に載っていそうな味わい。',
+    '鳥たちの間で話題になっているらしい。',
+    '飲む前に三回まわすのが通の飲み方。',
+  ],
+  /* 特定の組み合わせで優先される一文。if の条件をすべて満たすと採用候補になる */
+  combos: [
+    /* ── 効果どうしの組み合わせ（effects に書いた効果がすべて付いていると採用） ── */
+    { if: { effects: ['giant', 'tiny'] }, text: '大きくなったり小さくなったり、本人もどっちかわからない。' },
+    { if: { effects: ['nya_speech', 'gozaru'] }, text: '語尾が「ニャでござる」に落ち着くらしい。' },
+    { if: { effects: ['love_potion', 'scarecrow_love'] }, text: 'なぜか毎回カカシと目が合う。' },
+    { if: { effects: ['cat_magnet', 'dog_friend'] }, text: '犬と猫に取り合いをされる、うれしい悲鳴の一本。' },
+    { if: { effects: ['cat_magnet', 'frog_voice'] }, text: '猫は寄ってくるが、ケロケロ声に首をかしげている。' },
+    { if: { effects: ['invisible', 'glow'] }, text: '透明なのに光っているので、まったく隠れられない。' },
+    { if: { effects: ['invisible', 'transparent_hands'] }, text: '全身透明なのに、手だけは念入りに透明。' },
+    { if: { effects: ['sleep', 'awake'] }, text: '眠いのに目が冴える。一晩中、天井とにらめっこ。' },
+    { if: { effects: ['warm', 'chill'] }, text: '右半身ぽかぽか、左半身ひんやり。' },
+    { if: { effects: ['laugh', 'cry'] }, text: '笑いながら泣く。感情が忙しい。' },
+    { if: { effects: ['honest', 'sweet_talk'] }, text: '本音が全部ロマンチックに出てくる危険な組み合わせ。' },
+    { if: { effects: ['dance', 'sing'] }, text: '歌って踊れる一本。ステージは用意していない。' },
+    { if: { effects: ['dance', 'slow_motion'] }, text: '踊りが全部スローモーション。妙に感動的。' },
+    { if: { effects: ['float', 'gravity_flip'] }, text: '浮いたまま天井を歩く。もう上も下もない。' },
+    { if: { effects: ['jackpot', 'bad_luck'] }, text: 'くじは当たるのに、帰り道で小指をぶつける。' },
+    { if: { effects: ['lucky_star', 'unlucky_umbrella'] }, text: '流れ星に「傘がほしい」と願う人が続出。' },
+    { if: { effects: ['fire_breath', 'chill'] }, text: '吐く火だけがひんやりしている。' },
+    { if: { effects: ['hiccup', 'hiccup_music'] }, text: '止まらないしゃっくりで、一日に何曲も作曲できる。' },
+    { if: { effects: ['muscle', 'muscles_look'] }, text: '見た目も中身もムキムキ。ついに本物になれた。' },
+    { if: { effects: ['shy', 'dramatic'] }, text: '恥ずかしがるほど背景に花が咲く。' },
+    { if: { effects: ['beard', 'cat_ears'] }, text: 'ひげと猫耳。もう猫と呼ぶしかない。' },
+    { if: { effects: ['ghost_see', 'shy'] }, text: 'お化けと見つめ合っては、お互いに照れる。' },
+    { if: { effects: ['echo', 'pun'] }, text: 'ダジャレがこだまして三回聞こえる。逃げ場はない。' },
+    { if: { effects: ['bird_call', 'mushroom_grow'] }, text: '頭のキノコの上で小鳥がひと休みしていく。' },
+    /* ── 効果と味・色などの組み合わせ ── */
+    { if: { effect: 'sleep', taste: 'spicy' }, text: '眠くなるのに辛すぎて眠れない、矛盾の一本。' },
+    { if: { effect: 'sleep', taste: 'soda' }, text: 'しゅわしゅわしながら夢の中へ。' },
+    { if: { effect: 'poison', taste: 'sweet' }, text: '甘い顔して油断ならない。' },
+    { if: { effect: 'poison', aroma: 'floral' }, text: '花の香りにだまされてはいけない。' },
+    { if: { effect: 'invisible', color: 'clear' }, text: '瓶ごと見えなくなりかけている。' },
+    { if: { effect: 'giant', bottle: 'tube' }, text: 'こんなに細い瓶なのに効果は特大。' },
+    { if: { effect: 'tiny', bottle: 'pot' }, text: '大きな壺に、小さくなる薬。' },
+    { if: { effect: 'fire_breath', taste: 'spicy' }, text: '辛さが限界を超えて、ついに火になった。' },
+    { if: { effect: 'chill', texture: 'steam' }, text: '湯気が出ているのに飲むとひんやり。' },
+    { if: { effect: 'warm', texture: 'mist' }, text: '冷たい霧の奥から、じんわりぬくもりが届く。' },
+    { if: { effect: 'heart', bottle: 'heart' }, text: '見た目も中身もときめき全開。' },
+    { if: { effect: 'luck_up', color: 'gold' }, text: '金運まで上がりそうな輝き。' },
+    { if: { effect: 'bad_luck', color: 'gold' }, text: '金色なのに縁起が悪い、という不思議。' },
+    { if: { effect: 'glow', color: 'black' }, text: '漆黒なのに光るという謎の現象。' },
+    { if: { effect: 'voice_high', texture: 'fizzy' }, text: '炭酸と一緒に声も弾ける。' },
+    { if: { effect: 'awake', taste: 'milk' }, text: 'ホットミルクなのに目が冴える。' },
+    { if: { color: 'rainbow' }, text: 'ひとつの瓶に七色の物語が詰まっている。' },
+    { if: { color: 'day_night' }, text: '上は昼、下は夜。飲むと少し時差ぼけになるらしい。' },
+    { if: { color: 'fire_ice' }, text: '熱いのか冷たいのか、瓶の中でもまだ決着がついていない。' },
+    { if: { color: 'mint_choco' }, text: '好みがきっぱり分かれる色合い。' },
+    { if: { color: 'galaxy' }, text: 'のぞきこむと、小さな星がまたたいている。' },
+    { if: { color: 'aurora' }, text: '北の空をそのまま瓶に閉じこめたような揺らめき。' },
+    { if: { color: 'strawberry_milk', taste: 'milk' }, text: '見た目も味も、どう見てもいちごミルク。' },
+    { if: { color: 'melon_soda', texture: 'fizzy' }, text: 'どう見ても喫茶店のメロンソーダ。でも薬。' },
+    { if: { color: 'poison_layer', effect: 'poison' }, text: '色からして、隠す気がまったくない。' },
+    { if: { color: 'sunset', effect: 'sleep' }, text: '夕暮れとともに、まぶたも沈んでいく。' },
+    { if: { color: 'pearl' }, text: '真珠のようなつやに、思わず見とれてしまう。' },
+    { if: { taste: 'nothing', aroma: 'none' }, text: '味もにおいもない。本当に薬なのだろうか。' },
+    { if: { effect: 'float', bottle: 'pot' }, text: '重たい壺ごと浮きそうになる。' },
+    { if: { effect: 'plant_friend', aroma: 'forest' }, text: '森の精霊のお墨付き。' },
+  ],
+  /* 「おまかせ」で提案する商品名のパターン */
+  nameTemplates: [
+    '{color}の{effect}薬',
+    '{texName}{effect}ポーション',
+    '{taste}{effect}ドリンク',
+    '{bottle}の{effect}',
+    '{aroma}の{effect}エキス',
+    '{effect}の雫',
+    '{potency}{effect}薬',
+  ],
+};

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#f6efe2">
+  <meta name="description" content="薬草を摘んで自由に調合する、のんびりポーション屋さん経営ゲーム">
+  <title>ふしぎなポーション工房</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="ポーション工房">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <h1 class="title">ふしぎなポーション工房</h1>
+      <div class="coins"><span id="coin-icon" class="coin-icon"></span><b id="coin-count">0</b></div>
+      <button class="icon-btn" id="open-settings" aria-label="設定">⚙️</button>
+    </header>
+    <main id="screen-root" class="screen-root"></main>
+    <nav id="tabbar" class="tabbar"></nav>
+  </div>
+  <div id="modal-root"></div>
+  <div id="toast-root"></div>
+  <noscript>JavaScript を有効にしてください。</noscript>
+
+  <!-- 読み込み順：名前空間 → データ → 素材 → ロジック → 保存 → 画面 → 起動 -->
+  <script src="js/namespace.js"></script>
+  <script src="data/balance.js"></script>
+  <script src="data/materials.js"></script>
+  <script src="data/rarities.js"></script>
+  <script src="data/effects.js"></script>
+  <script src="data/flavors.js"></script>
+  <script src="data/looks.js"></script>
+  <script src="data/descriptions.js"></script>
+  <script src="data/reviews.js"></script>
+  <script src="data/upgrades.js"></script>
+  <script src="data/gardenEvents.js"></script>
+  <script src="assets/manifest.js"></script>
+  <script src="assets/art.js"></script>
+  <script src="assets/sound.js"></script>
+  <script src="assets/bgm.js"></script>
+  <script src="js/core/rng.js"></script>
+  <script src="js/core/lookup.js"></script>
+  <script src="js/core/stats.js"></script>
+  <script src="js/core/state.js"></script>
+  <script src="js/core/gather.js"></script>
+  <script src="js/core/describe.js"></script>
+  <script src="js/core/generator.js"></script>
+  <script src="js/core/brew.js"></script>
+  <script src="js/core/sales.js"></script>
+  <script src="js/core/reviews.js"></script>
+  <script src="js/core/upgrades.js"></script>
+  <script src="js/save/db.js"></script>
+  <script src="js/save/migrations.js"></script>
+  <script src="js/save/repository.js"></script>
+  <script src="js/save/exportImport.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/clock.js"></script>
+  <script src="js/ui/common.js"></script>
+  <script src="js/ui/potionNote.js"></script>
+  <script src="js/ui/garden.js"></script>
+  <script src="js/ui/lab.js"></script>
+  <script src="js/ui/codex.js"></script>
+  <script src="js/ui/shop.js"></script>
+  <script src="js/ui/upgrade.js"></script>
+  <script src="js/ui/settings.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
