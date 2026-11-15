@@ -2,6 +2,7 @@
  * 思い出の称号
  *  ・条件を満たした日に手に入り、図鑑の「思い出」に日付と一緒に飾られる
  *  ・まだ手に入れていない称号は「？？？」と、ヒント（hint）だけを表示する（数字の進み具合は見せない）
+ *  ・「すべての〜」のような条件・文言は使わない（効果やカテゴリを増やしても意味が変わらないように、数で決める）
  *  ・増やすときは list に1件追加する。check(state, ctx) が true になったら手に入る
  *  ・badge … メダルの絵柄（assets/art.js の memoryBadge の G のキー）/ color … メダルの地の色
  *    ctx … { kinds: 作った内容の種類数, effects: 見つけた効果の数, cats: 見つけた効果の種類（カテゴリ）数, has(レア度), bottle(瓶ID), cat(カテゴリID：メイン効果) }
@@ -23,7 +24,7 @@ PS.data.memories = {
     { id: 'brew_50', badge: 'flask2', color: '#dcf2e6', hint: 'とにかくたくさん調合しよう', name: '一人前の調合師',     desc: 'ポーションを50回作った',                 check: s => s.stats.brewed >= 50 },
     { id: 'brew_200', badge: 'flask3', color: '#dcf2e6', hint: 'もっともっと、調合を続けよう', name: '調合の達人',         desc: 'ポーションを200回作った',                check: s => s.stats.brewed >= 200 },
     { id: 'kinds_30', badge: 'book', color: '#fde2ea', hint: 'いろんな種類のポーションを集めよう', name: 'ポーション蒐集家',   desc: '30種類のポーションを作った',             check: (s, c) => c.kinds >= 30 },
-    { id: 'cats_all', badge: 'palette', color: '#e8f4fb', hint: 'いろいろな効果の種類を見つけよう', name: 'なんでも作れます',   desc: 'すべての種類の効果を見つけた',           check: (s, c) => c.cats >= PS.data.effectCategories.length },
+    { id: 'cats_all', badge: 'palette', color: '#e8f4fb', hint: 'いろいろなカテゴリの効果を見つけよう', name: '多才な調合師',   desc: '8つのカテゴリの効果を見つけた',          check: (s, c) => c.cats >= 8 },   // 効果やカテゴリが増えても変わらないよう、数で決める
     { id: 'effects_50', badge: 'glass1', color: '#e8f4fb', hint: 'まだ見たことのない効果を探してみよう', name: 'ふしぎ探検家',       desc: '効果を50個見つけた',                     check: (s, c) => c.effects >= 50 },
     { id: 'effects_100', badge: 'glass2', color: '#e8f4fb', hint: 'ふしぎな効果を、もっともっと探そう', name: 'ふしぎ博士',         desc: '効果を100個見つけた',                    check: (s, c) => c.effects >= 100 },
     { id: 'reviews_50', badge: 'bubbles', color: '#fff0f5', hint: 'お客さんの声をたくさん集めよう', name: 'うわさのお店',       desc: 'レビューがたくさん届くようになった',     check: s => s.reviews.length >= 50 },
