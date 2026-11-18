@@ -6,6 +6,10 @@
  *  { app: 'chiisana-potion-shop', format: 1, appVersion, schemaVersion, exportedAt, state: {...} }
  * 読み込みでは、この形のほか「state だけ」の JSON も受け付ける。
  * 古いバージョンのデータは migrations.js で最新の形に変換してから取り込む。
+ *
+ * 引き継ぎコード（テキストで移すとき用。中身は上と同じ JSON を圧縮したもの）：
+ *  「FPW1-」＋ gzip で圧縮して base64url にした文字列。中身はまったく同じなので、何も失われない
+ *  読み込みでは、引き継ぎコードと、これまでの JSON テキストの両方を受け付ける（改行や空白が混ざっても読める）
  */
 (function (PS) {
   'use strict';
@@ -27,6 +31,63 @@
 
   function toText(state, now) {
     return JSON.stringify(buildExport(state, now));
+  }
+
+  /* ---------- 引き継ぎコード（圧縮） ---------- */
+  const CODE_PREFIX = 'FPW1-';
+  const canCompress = () => typeof CompressionStream === 'function' && typeof DecompressionStream === 'function' && typeof Response === 'function';
+
+  function bytesToB64url(bytes) {
+    let s = '';
+    for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+    return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+  function b64urlToBytes(str) {
+    let b = str.replace(/-/g, '+').replace(/_/g, '/');
+    while (b.length % 4) b += '=';
+    const bin = atob(b);
+    const out = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+  }
+  async function gzip(text) {
+    const stream = new Blob([text]).stream().pipeThrough(new CompressionStream('gzip'));
+    return new Uint8Array(await new Response(stream).arrayBuffer());
+  }
+  async function gunzip(bytes) {
+    const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+    return new Response(stream).text();
+  }
+
+  /** 引き継ぎコードを作る（圧縮できない古いブラウザでは null） */
+  async function toCode(state, now) {
+    if (!canCompress()) return null;
+    const text = toText(state, now);
+    const code = CODE_PREFIX + bytesToB64url(await gzip(text));
+    // 念のため、元に戻して同じになるか確かめてから渡す（壊れたコードを渡さないため）
+    if ((await decodeCode(code)) !== text) throw new Error('引き継ぎコードを作れませんでした');
+    return code;
+  }
+
+  async function decodeCode(code) {
+    if (!canCompress()) throw new Error('このブラウザは引き継ぎコードに対応していません。ファイルで読み込んでください');
+    let bytes;
+    try { bytes = b64urlToBytes(code.slice(CODE_PREFIX.length)); }
+    catch (_) { throw new Error('引き継ぎコードが正しくありません（文字が足りないか、ちがう文字が混ざっています）'); }
+    try { return await gunzip(bytes); }
+    catch (_) { throw new Error('引き継ぎコードが途中で切れているか、まちがっています。もう一度コピーしてください'); }
+  }
+
+  /** 引き継ぎコードでも JSON テキストでも読み込む（parse と同じく、今のデータには触らない） */
+  async function parseAny(input) {
+    if (typeof input !== 'string' || !input.trim()) throw new Error('データが空です');
+    const at = input.indexOf(CODE_PREFIX);
+    if (at >= 0 && input.trim()[0] !== '{') {
+      // 改行・空白・かっこなど、コードに使わない文字が混ざっても読めるように取りのぞく
+      const code = CODE_PREFIX + input.slice(at + CODE_PREFIX.length).replace(/[^A-Za-z0-9_-]/g, '');
+      return parse(await decodeCode(code));
+    }
+    return parse(input);
   }
 
   function fileName(now) {
@@ -86,5 +147,5 @@
     return { state, summary: summarize(state, meta) };
   }
 
-  PS.save.exportImport = { buildExport, toText, fileName, parse, summarize, APP_ID };
+  PS.save.exportImport = { buildExport, toText, toCode, decodeCode, parseAny, canCompress, fileName, parse, summarize, APP_ID, CODE_PREFIX };
 })(window.PS);

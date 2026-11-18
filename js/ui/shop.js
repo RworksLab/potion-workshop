@@ -30,6 +30,104 @@
       <div class="stat"><small>これまでの売上</small><b>${s.stats.earned.toLocaleString()}<i>G</i></b></div>`;
   }
 
+  /* ---------- お店の模様替え ---------- */
+  const DC = () => PS.core.decor;
+  /** 使っている模様替えを、お店の画面の色（CSS の変数）に反映する */
+  function decorVars(state) {
+    const w = DC().current(state, 'wood').wood, wall = DC().current(state, 'wall').wall;
+    const tg = DC().current(state, 'tag'), t = tg.tag, n = DC().current(state, 'name').name_;
+    const def = tg.id === PS.data.decor.defaults.tag;
+    return {
+      '--wood-hi': w[0], '--wood': w[1], '--wood-lo': w[2], '--wood-sh': w[3], '--wall': wall,
+      '--tag-bg': t.bg, '--tag-border': t.border, '--tag-string': t.string, '--tag-ink': t.ink || 'inherit', '--tag-ribbon': t.ribbon || 'transparent',
+      '--tag-ssr-bg': def ? '' : t.bg, '--tag-ur-bg': def ? '' : t.bg,
+      '--name-bg': n.bg, '--name-border': n.border, '--name-ink': n.ink,
+      ribbon: !!t.ribbon,
+    };
+  }
+  function applyDecor() {
+    if (!root) return;
+    const v = decorVars(PS.store.state);
+    for (const [k, val] of Object.entries(v)) if (k.startsWith('--')) { if (val) root.style.setProperty(k, val); else root.style.removeProperty(k); }
+    root.classList.toggle('decor-ribbon', v.ribbon);
+  }
+
+  /** 見本：その品を使ったときの棚の一部を小さく描く */
+  function decorSample(it) {
+    const s = JSON.parse(JSON.stringify({ decor: PS.store.state.decor }));
+    s.decor.owned = s.decor.owned.concat(it.id); s.decor.use[it.cat] = it.id;
+    const v = decorVars(s);
+    const style = Object.entries(v).filter(([k, val]) => k.startsWith('--') && val).map(([k, val]) => `${k}:${val}`).join(';');
+    if (it.cat === 'name') return `<span class="dc-sample dc-name" style="${style}"><span class="shop-name-btn">${ui.esc(PS.store.state.shopName)}</span></span>`;
+    if (it.cat === 'tag') return `<span class="dc-sample dc-tag ${v.ribbon ? 'decor-ribbon' : ''}" style="${style}"><span class="slot"><span class="tag"><span class="tag-name">ポーション</span><span class="tag-row"><b class="tag-price">80<i>G</i></b></span></span></span></span>`;
+    return `<span class="dc-sample dc-shelf" style="${style}"><span class="cabinet"><span class="cabinet-inner"><span class="dc-board"></span></span></span></span>`;
+  }
+
+  let decorCat = 'wood';
+  function openDecor() {
+    const body = ui.modal.open(`<h3 class="modal-title dc-title"><span class="dc-title-art">${PS.assets.art.render('decor_icon')}</span>お店の模様替え</h3>
+      <p class="dc-sub">見た目だけが変わります。買ったものは、いつでも切り替えられます</p>
+      <div class="seg dc-tabs">${PS.data.decor.cats.concat([{ id: 'bgm', name: 'BGM' }]).map(c => `<button class="seg-btn ${c.id === decorCat ? 'on' : ''}" data-cat="${c.id}">${c.name}</button>`).join('')}</div>
+      <div class="dc-list" id="dc-list"></div>`, { cls: 'modal-decor', onClose: () => PS.assets.bgm.stopPreview() });
+    const list = body.querySelector('#dc-list');
+    const NOTE_COLORS = { rainy: ['#d6ecfa', '#6fb6e6'], starbox: ['#e8dcfb', '#b48be8'], waltz: ['#fde2ea', '#f07aa8'], festival: ['#fde3c8', '#f3a85c'] };
+    const songArt = key => { const [bg, fg] = NOTE_COLORS[key] || ['#eee', '#999'];
+      return `<span class="dc-sample dc-song" style="background:${bg}"><svg viewBox="0 0 48 48"><path d="M19 32 V13 L35 9 V28" fill="none" stroke="${fg}" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+        <ellipse cx="15" cy="33" rx="5.5" ry="4.2" fill="${fg}"/><ellipse cx="31" cy="29" rx="5.5" ry="4.2" fill="${fg}"/></svg></span>`; };
+    const drawSongs = () => {
+      const s = PS.store.state, playingPrev = PS.assets.bgm.previewing();
+      list.innerHTML = PS.data.decor.songs.map(it => {
+        const owned = DC().ownsSong(s, it.song), using = s.settings.bgmSong === it.song;
+        const pv = `<button class="btn ghost small dc-preview ${playingPrev === it.song ? 'on' : ''}" data-preview="${it.song}">${playingPrev === it.song ? '■ 止める' : '▶ 試聴'}</button>`;
+        const btn = using ? '<span class="dc-using">流しています</span>'
+          : owned ? `<button class="btn ghost small" data-song="${it.song}">この曲にする</button>`
+          : `<button class="btn ${s.coins >= it.price ? 'primary' : 'ghost'} small dc-buy" data-buysong="${it.id}" ${s.coins >= it.price ? '' : 'disabled'}><span class="dc-coin">${PS.assets.art.render('coin')}</span>${it.price.toLocaleString()}</button>`;
+        return `<div class="dc-item ${using ? 'using' : ''}">${songArt(it.song)}<b>${ui.esc(it.name)}</b><small class="dc-desc">${ui.esc(it.desc)}</small>${pv}${btn}</div>`;
+      }).join('');
+    };
+    const draw = () => {
+      if (decorCat === 'bgm') { drawSongs(); return; }
+      const s = PS.store.state;
+      list.innerHTML = PS.data.decor.items.filter(it => it.cat === decorCat).map(it => {
+        const owned = DC().owns(s, it.id), using = DC().current(s, it.cat).id === it.id;
+        const btn = using ? '<span class="dc-using">使っています</span>'
+          : owned ? `<button class="btn ghost small" data-use="${it.id}">使う</button>`
+          : `<button class="btn ${s.coins >= it.price ? 'primary' : 'ghost'} small dc-buy" data-buy="${it.id}" ${s.coins >= it.price ? '' : 'disabled'}><span class="dc-coin">${PS.assets.art.render('coin')}</span>${it.price.toLocaleString()}</button>`;
+        return `<div class="dc-item ${using ? 'using' : ''}">${decorSample(it)}<b>${ui.esc(it.name)}</b>${btn}</div>`;
+      }).join('');
+    };
+    draw();
+    body.querySelector('.dc-tabs').addEventListener('click', e => {
+      const b = e.target.closest('[data-cat]'); if (!b) return;
+      decorCat = b.dataset.cat; PS.assets.sound.play('tap'); PS.assets.bgm.stopPreview();
+      body.querySelectorAll('.dc-tabs .seg-btn').forEach(x => x.classList.toggle('on', x === b)); draw();
+    });
+    list.addEventListener('click', e => {
+      const u = e.target.closest('[data-use]'), bb = e.target.closest('[data-buy]');
+      const pv = e.target.closest('[data-preview]'), sg = e.target.closest('[data-song]'), bs = e.target.closest('[data-buysong]');
+      if (pv) {
+        if (PS.assets.bgm.previewing() === pv.dataset.preview) PS.assets.bgm.stopPreview(); else PS.assets.bgm.preview(pv.dataset.preview, 20);
+        setTimeout(draw, 50); return;
+      }
+      if (sg || bs) {
+        try {
+          if (bs) { const it = PS.store.commit('settings', s => DC().buySong(s, bs.dataset.buysong)); PS.assets.sound.play('upgrade'); ui.toast(`「${it.name}」を手に入れました`); }
+          else PS.store.commit('settings', s => { s.settings.bgmSong = sg.dataset.song; });
+        } catch (err) { ui.toast(err.message); return; }
+        PS.assets.bgm.stopPreview();
+        PS.app.applySound(PS.store.state.settings);
+        if (PS.store.state.settings.bgmOn === false) ui.toast('BGM はオフになっています（設定でオンにできます）');
+        draw(); return;
+      }
+      try {
+        if (u) { PS.store.commit('decor', s => DC().use(s, u.dataset.use)); PS.assets.sound.play('tap'); }
+        else if (bb) { const it = PS.store.commit('decor', s => DC().buy(s, bb.dataset.buy)); PS.assets.sound.play('upgrade'); ui.toast(`「${it.name}」に模様替えしました`); }
+        else return;
+      } catch (err) { ui.toast(err.message); return; }
+      applyDecor(); draw();
+    });
+  }
+
   /* ---------- お客さんの注文 ---------- */
   const O = () => PS.core.orders;
   function timeLeft(ms) {
@@ -185,7 +283,7 @@
     PS.store.commit('reviewsRead', st => PS.core.reviews.markAllRead(st));
   }
 
-  function renderAll() { renderTop(); renderStats(); renderOrders(); renderShelves(); renderReviews(); renderLog(); }
+  function renderAll() { applyDecor(); renderTop(); renderStats(); renderOrders(); renderShelves(); renderReviews(); renderLog(); }
 
   /** 売れるまでのバーだけ更新 */
   function tickBars() {
@@ -366,7 +464,8 @@
           <div class="orders" id="shop-orders" hidden></div>
         </section>
         <section class="cabinet-wrap">
-          <div class="cabinet-head"><h3>商品棚</h3><span class="cabinet-count" id="cabinet-count"></span></div>
+          <div class="cabinet-head"><h3>商品棚</h3><span class="cabinet-count" id="cabinet-count"></span>
+            <button class="decor-btn" id="decor-btn"><span class="decor-btn-art">${PS.assets.art.render('decor_icon')}</span>模様替え</button></div>
           <div class="cabinet"><div class="cabinet-inner" id="shop-cabinet"></div></div>
           <p class="cabinet-hint" id="cabinet-hint"></p>
         </section>
@@ -397,6 +496,7 @@
         PS.assets.sound.play('tap');
         openGive(b.closest('.order').dataset.id);
       });
+      el.querySelector('#decor-btn').addEventListener('click', () => { PS.assets.sound.play('tap'); openDecor(); });
       el.querySelector('#shop-name-btn').addEventListener('click', () => { PS.assets.sound.play('tap'); openRename(); });
       bottomEl.querySelector('.seg').addEventListener('click', e => {
         const b = e.target.closest('[data-tab]');

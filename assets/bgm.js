@@ -93,6 +93,21 @@
       s.connect(f); f.connect(g); g.connect(master);
       s.start(t, Math.random() * 0.05); s.stop(t + 0.14);
     },
+    /** 雨音（ぽつぽつ。高い音だけのやわらかいノイズを短く） */
+    drop(t, gain = 0.012) {
+      const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+      s.buffer = noise(); f.type = 'bandpass'; f.frequency.value = 2500 + R() * 3500; f.Q.value = 6;
+      g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(gain, t + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.07);
+      s.connect(f); f.connect(g); g.connect(master);
+      s.start(t, R() * 0.1); s.stop(t + 0.09);
+    },
+    /** やさしい太鼓（どん） */
+    drum(t, gain = 0.16) {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'sine'; o.frequency.setValueAtTime(150, t); o.frequency.exponentialRampToValueAtTime(60, t + 0.18);
+      g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(gain, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
+      o.connect(g); g.connect(master); o.start(t); o.stop(t + 0.32);
+    },
     /** ウッドブロック（こんこん） */
     block(t, gain = 0.05, hi) {
       const o = ctx.createOscillator(), g = ctx.createGain();
@@ -181,6 +196,62 @@
     },
   };
 
+  /* ---------- お店で買える曲（data/decor.js の songs で値段を決める） ---------- */
+  Object.assign(SONGS, {
+    // 雨の日の工房：ヘ長調・ゆっくり。あたたかい和音とオルゴールに、窓の外のやさしい雨音
+    rainy: {
+      name: '雨の日の工房', bpm: 68, gain: 1.2,
+      chords: [[41, 64, 69, 72], [45, 64, 67, 72], [46, 62, 65, 69], [48, 64, 67, 69], [41, 64, 69, 72], [38, 65, 69, 72], [43, 65, 70, 74], [48, 64, 67, 72]],
+      bar(p) {
+        const { t, beat, ch, i } = p;
+        ch.slice(1).forEach(n => I.pad(n - 12, t, beat * 4, 0.026));
+        I.bass(ch[0], t, beat * 2.5, 0.09); I.bass(ch[0] + 7, t + beat * 2, beat * 1.8, 0.06);
+        const arp = [ch[1], ch[2], ch[3], ch[2] + 12];
+        arp.forEach((n, k) => { if (k === 0 || R() < 0.75) I.bell(n + 12, t + k * beat, k === 0 ? 0.045 : 0.03); });
+        if (i % 2 === 1 && R() < 0.6) I.bell(ch[3] + 24, t + beat * 3.5, 0.02);
+        for (let k = 0; k < 7; k++) I.drop(t + R() * beat * 4, 0.004 + R() * 0.005);
+      },
+    },
+    // お祭りの夜：ヘ長調のにぎやかな五音音階。太鼓とウッドブロック、オルゴールの分散和音
+    festival: {
+      name: 'お祭りの夜', bpm: 118, gain: 1.7,
+      chords: [[41, 65, 69, 72], [41, 65, 69, 72], [46, 65, 70, 74], [48, 67, 72, 76], [41, 65, 69, 72], [43, 67, 70, 74], [48, 67, 72, 76], [41, 65, 69, 72]],
+      bar(p) {
+        const { t, beat, ch, i } = p;
+        I.drum(t, 0.17); I.drum(t + beat * 2, 0.13); if (i % 2) I.drum(t + beat * 3.5, 0.1);
+        I.block(t + beat, 0.035); I.block(t + beat * 3, 0.035, true);
+        I.pluckBass(ch[0], t, beat * 0.9); I.pluckBass(ch[0] + 7, t + beat * 2, beat * 0.9);
+        const arp = [ch[1], ch[2], ch[3], ch[2], ch[1] + 12, ch[3], ch[2], ch[3] + 12];
+        arp.forEach((n, k) => { if (k === 0 || R() < 0.8) I.marimba(n, t + k * beat / 2, k % 2 ? 0.04 : 0.06); });
+        for (let k = 0; k < 8; k++) I.shaker(t + k * beat / 2, k % 2 ? 0.016 : 0.007);
+      },
+    },
+    // 月夜のワルツ：3拍子。ベースが1拍目、和音が2・3拍目
+    waltz: {
+      name: '月夜のワルツ', bpm: 108, beats: 3, gain: 1.7,
+      chords: [[43, 67, 71, 74], [40, 64, 67, 71], [36, 64, 67, 72], [38, 62, 66, 69], [43, 67, 71, 74], [45, 64, 69, 72], [38, 62, 66, 69], [43, 67, 71, 74]],
+      bar(p) {
+        const { t, beat, ch, i } = p;
+        I.bass(ch[0], t, beat * 1.2, 0.12);
+        [1, 2].forEach(b => ch.slice(1).forEach(n => I.marimba(n, t + b * beat, 0.028)));
+        I.bell(ch[1 + (i % 3)] + 12, t, 0.06); if (R() < 0.6) I.bell(ch[1 + ((i + 1) % 3)] + 12, t + beat * 2, 0.04);
+        ch.slice(1).forEach(n => I.pad(n - 12, t, beat * 3, 0.015));
+      },
+    },
+    // 星屑のオルゴール：ゆっくりの子守歌。高いオルゴールがきらきら
+    starbox: {
+      name: '星屑のオルゴール', bpm: 60, gain: 1.7,
+      chords: [[48, 72, 76, 79], [45, 72, 76, 81], [41, 72, 77, 81], [43, 71, 74, 79], [48, 72, 76, 79], [40, 71, 76, 79], [41, 69, 72, 77], [43, 71, 74, 79]],
+      bar(p) {
+        const { t, beat, ch } = p;
+        ch.slice(1).forEach(n => I.pad(n - 24, t, beat * 4, 0.02));
+        I.bass(ch[0], t, beat * 3.5, 0.08);
+        const arp = [ch[1], ch[2], ch[3], ch[2] + 12, ch[3], ch[2]];
+        arp.forEach((n, k) => I.bell(n + 12, t + k * beat * 4 / 6, k === 0 ? 0.05 : 0.03));
+      },
+    },
+  });
+
   /** 時間で切り替えるときの曲（時間帯は薬草園の空と同じ：夜は19時〜5時） */
   const AUTO = { morning: 'picnic', day: 'picnic', evening: 'picnic', night: 'meadow' };
   const timeOfDay = () => (PS.ui && PS.ui.timeOfDay ? PS.ui.timeOfDay() : 'day');
@@ -189,8 +260,9 @@
   let enabled = true, volume = 0.5, started = false, playing = false, choice = 'auto', songId = 'picnic';
   let timer = null, nextBar = 0, barIndex = 0, melody = null;
   let fileAudio = null;
+  let previewId = null, previewTimer = null;   // 試聴中の曲（買う前に聞ける）
   const song = () => SONGS[songId] || SONGS.picnic;
-  const resolve = () => (choice === 'auto' ? AUTO[timeOfDay()] : choice);
+  const resolve = () => previewId || (choice === 'auto' ? AUTO[timeOfDay()] : choice);
 
   /** 時間で切り替える設定のとき、時間帯が変わったら曲を替える（1分ごとに確かめる） */
   setInterval(() => {
@@ -205,7 +277,7 @@
     const i = barIndex % s.chords.length;
     s.bar({ t, beat, ch: s.chords[i], i, melody });
     barIndex++;
-    return beat * 4;
+    return beat * (s.beats || 4);
   }
 
   let lateCount = 0;
@@ -234,7 +306,7 @@
     delay.delayTime.value = (60 / s.bpm) * 0.75;   // 付点8分の山びこ
   }
 
-  const level = () => volume * 0.8;
+  const level = () => volume * 0.8 * (song().gain || 1);   // gain：曲ごとの大きさのそろえ
 
   function startSynth() {
     if (!ctx && !setup()) return;
@@ -261,7 +333,7 @@
   }
 
   function start() {
-    if (playing || !started || !enabled || document.hidden) return;
+    if (playing || !started || !(enabled || previewId) || document.hidden) return;
     playing = true;
     songId = resolve();
     const def = PS.assets.manifest.bgm || {};
@@ -315,7 +387,24 @@
       if (resolve() === songId) return;
       if (playing) { stop(); setTimeout(start, 650); } else songId = resolve();
     },
-    list: () => [{ id: 'auto', name: '時間で切り替え' }].concat(Object.entries(SONGS).map(([id, s]) => ({ id, name: s.name }))),
+    /** 曲の一覧（canUse で、持っている曲だけにしぼれる） */
+    list: canUse => [{ id: 'auto', name: '時間で切り替え' }].concat(Object.entries(SONGS).filter(([id]) => !canUse || canUse(id)).map(([id, s]) => ({ id, name: s.name }))),
+    /** 試聴：その曲を seconds 秒だけ流して、もとの曲に戻す（BGM がオフでも聞ける） */
+    preview(id, seconds) {
+      if (!SONGS[id]) return;
+      clearTimeout(previewTimer);
+      started = true;
+      const c = PS.assets.sound.context(); if (c && c.state !== 'running') c.resume().catch(() => {});
+      previewId = id;
+      if (playing) { stop(); setTimeout(start, 650); } else start();
+      previewTimer = setTimeout(() => this.stopPreview(), (seconds || 15) * 1000);
+    },
+    stopPreview() {
+      if (!previewId) return;
+      clearTimeout(previewTimer); previewId = null;
+      stop(); setTimeout(start, 650);
+    },
+    previewing: () => previewId,
     current: () => songId,
     autostart,
     isPlaying: () => playing,

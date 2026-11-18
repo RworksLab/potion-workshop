@@ -67,6 +67,7 @@ PS.assets.manifest = {
     // 思い出の称号のメダル（data/memories.js の badge・color を渡して描く）
     memory: { type: 'svg', draw: 'memoryBadge', params: {} },
     order_scroll: { type: 'svg', draw: 'memoryBadge', params: { name: 'scroll', plain: true } },
+    decor_icon:   { type: 'svg', draw: 'memoryBadge', params: { name: 'palette', plain: true } },
 
     // 薬草園の景色と、たまに遊びに来る生き物（data/gardenEvents.js の art から参照）
     garden_sky:        { type: 'svg', draw: 'gardenSky', params: {} },

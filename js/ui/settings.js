@@ -36,8 +36,8 @@
       <div class="card">
         <label class="row">効果音 <input type="range" id="se-vol" min="0" max="1" step="0.05" value="${s.settings.seVolume}"></label>
         <label class="row">BGM <span class="switch"><input type="checkbox" id="bgm-on" ${s.settings.bgmOn !== false ? 'checked' : ''}><i></i></span></label>
-        <label class="row">BGM の曲 <select id="bgm-song">${PS.assets.bgm.list().map(x => `<option value="${x.id}" ${x.id === s.settings.bgmSong ? 'selected' : ''}>${x.name}</option>`).join('')}</select></label>
-        <p class="bgm-hint">「時間で切り替え」：朝・昼・夕方はピクニック、夜（19時〜5時）はのどかな草原</p>
+        <label class="row">BGM の曲 <select id="bgm-song">${PS.assets.bgm.list(id => PS.core.decor.ownsSong(s, id)).map(x => `<option value="${x.id}" ${x.id === s.settings.bgmSong ? 'selected' : ''}>${x.name}</option>`).join('')}</select></label>
+        <p class="bgm-hint">「時間で切り替え」：朝・昼・夕方はピクニック、夜（19時〜5時）はのどかな草原。ほかの曲は、お店の「模様替え」で買えます</p>
         <label class="row">BGM の音量 <input type="range" id="bgm-vol" min="0" max="1" step="0.05" value="${s.settings.bgmVolume}"></label>
       </div>
 
@@ -45,10 +45,10 @@
       <div class="card">
         <p class="note top">機種変更や、別のブラウザで続きを遊ぶときに使います。ときどき書き出しておくと安心です。</p>
         <button class="btn primary wide" id="exp-file">📤 ファイルに書き出す</button>
-        <button class="btn ghost wide" id="exp-copy">📋 テキストでコピーする</button>
+        <button class="btn ghost wide" id="exp-copy">📋 引き継ぎコードをコピーする</button>
         <hr class="sep">
         <button class="btn primary wide" id="imp-file">📥 ファイルから読み込む</button>
-        <button class="btn ghost wide" id="imp-paste">📝 テキストを貼り付けて読み込む</button>
+        <button class="btn ghost wide" id="imp-paste">📝 引き継ぎコードを貼り付けて読み込む</button>
         <input type="file" id="imp-input" accept=".json,application/json,text/plain" hidden>
       </div>
       <div class="card" id="backup-card">
@@ -116,9 +116,14 @@
 
   async function exportCopy() {
     await PS.store.flush();
-    const text = XI().toText(PS.store.state);
-    const body = ui.modal.open(`<h3 class="modal-title">テキストでコピー</h3>
-      <p class="note top">下の文字をすべてコピーして、メモ帳などに保存してください。別の端末では「テキストを貼り付けて読み込む」で戻せます。</p>
+    // 引き継ぎコード（圧縮して短くしたもの）。作れない古いブラウザでは、これまでのテキストにする
+    let text = null;
+    try { text = await XI().toCode(PS.store.state); } catch (_) { text = null; }
+    const isCode = !!text;
+    if (!text) text = XI().toText(PS.store.state);
+    const body = ui.modal.open(`<h3 class="modal-title">${isCode ? '引き継ぎコード' : 'テキストでコピー'}</h3>
+      <p class="note top">下の${isCode ? 'コード' : '文字'}をすべてコピーして、メモ帳などに保存してください。別の端末では「引き継ぎコードを貼り付けて読み込む」で戻せます。</p>
+      <p class="save-size">${text.length.toLocaleString()}文字</p>
       <textarea class="save-text" readonly>${ui.esc(text)}</textarea>
       <button class="btn primary wide" id="copy-now">コピーする</button>`);
     const ta = body.querySelector('textarea');
@@ -133,7 +138,7 @@
   /* ---------- 読み込み ---------- */
   async function confirmAndApply(text) {
     let parsed;
-    try { parsed = XI().parse(text); }
+    try { parsed = await XI().parseAny(text); }
     catch (e) { PS.assets.sound.play('error'); await ui.modal.alert(e.message); return; }
     const cur = XI().summarize(PS.store.state, { appVersion: PS.VERSION, exportedAt: Date.now() });
     const body = ui.modal.open(`<h3 class="modal-title">このデータを読み込みますか？</h3>
@@ -169,9 +174,9 @@
   }
 
   function importPaste() {
-    const body = ui.modal.open(`<h3 class="modal-title">テキストを貼り付けて読み込む</h3>
-      <p class="note top">書き出したセーブデータの文字を、すべて貼り付けてください。</p>
-      <textarea class="save-text" id="paste-area" placeholder='{"app":"chiisana-potion-shop", ...}'></textarea>
+    const body = ui.modal.open(`<h3 class="modal-title">引き継ぎコードを貼り付けて読み込む</h3>
+      <p class="note top">「FPW1-」で始まる引き継ぎコードを、すべて貼り付けてください。以前の長いテキストやファイルの中身も読み込めます。</p>
+      <textarea class="save-text" id="paste-area" placeholder="FPW1-…"></textarea>
       <button class="btn primary wide" id="paste-go">確認する</button>`);
     body.querySelector('#paste-go').onclick = () => {
       const text = body.querySelector('#paste-area').value;

@@ -34,6 +34,11 @@
       s.memories = {};
       return s;
     },
+    // v5 → v6：お店の模様替えを追加（今までの見た目のまま始まる）
+    6: s => {
+      s.decor = { owned: [], use: {} };
+      return s;
+    },
   };
 
   function migrate(raw) {

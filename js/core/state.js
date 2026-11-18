@@ -7,7 +7,7 @@
 (function (PS) {
   'use strict';
 
-  const SCHEMA_VERSION = 5;
+  const SCHEMA_VERSION = 6;
 
   function createInitialState(now) {
     now = now || Date.now();
@@ -30,6 +30,7 @@
       autoGather: { progressSec: 0 }, // 自動採取（お手伝い妖精）の準備の進み具合
       orders: { list: [], nextAt: now + ((PS.data.orders && PS.data.orders.firstDelayMin) || 2) * 60000 }, // お客さんの注文 [{ id, customer, kind, value, text, createdAt, expiresAt }]
       memories: {},             // 思い出の称号 { 称号ID: 手に入れた日時 }
+      decor: { owned: [], use: {} }, // お店の模様替え { owned: 買った品, use: { wood, wall, tag, name } }
       stats: { harvested: 0, brewed: 0, sold: 0, earned: 0, spent: 0, autoHarvested: 0, daily: { date: '', earned: 0, sold: 0 } },
       settings: { seVolume: 0.7, bgmVolume: 0.5, bgmOn: true, bgmSong: 'auto' },
     };
@@ -61,6 +62,8 @@
     if (!isFinite(s.orders.nextAt)) s.orders.nextAt = 0;
     if (!s.memories || typeof s.memories !== 'object' || Array.isArray(s.memories)) s.memories = {};
     for (const k of Object.keys(s.memories)) if (!isFinite(s.memories[k])) delete s.memories[k];
+    // お店の模様替え（v6）
+    if (!s.decor || typeof s.decor !== 'object') s.decor = { owned: [], use: {} };
     s.garden.slots.forEach(sl => { if (sl && sl.special && !['lucky'].includes(sl.special)) delete sl.special; });
     if (!Array.isArray(s.potions)) throw new Error('ポーションデータが壊れています');
     s.potions = s.potions.filter(p => p && typeof p.id === 'string' && p.generated);
@@ -68,6 +71,7 @@
     s.stats = Object.assign(base.stats, s.stats || {});
     if (!s.stats.daily || typeof s.stats.daily !== 'object') s.stats.daily = { date: '', earned: 0, sold: 0 };
     s.settings = Object.assign(base.settings, s.settings || {});
+    if (PS.core.decor && PS.data.decor) PS.core.decor.normalize(s);   // 設定をそろえたあとで（持っていない曲の選択を戻すため）
     if (!Array.isArray(s.shelves)) s.shelves = [];
     s.shelves = s.shelves.map(sh => ({
       potionId: sh && typeof sh.potionId === 'string' ? sh.potionId : null,
